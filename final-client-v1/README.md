@@ -1,0 +1,1 @@
+для локального запуска можно использовать что-то типа https://chrome.google.com/webstore/detail/web-server-for-chrome/ofhbbkphhbklhfoeikjpcbhemlocgigb

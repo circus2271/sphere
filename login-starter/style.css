@@ -1,0 +1,136 @@
+@font-face {
+    font-family: 'Favoritpro';
+    src: url('fonts/FavoritPro-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: auto;
+}
+
+@font-face {
+    font-family: 'Favoritpro';
+    src: url('fonts/FavoritPro-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: auto;
+}
+
+@font-face {
+    font-family: 'Favoritpro';
+    src: url('fonts/FavoritPro-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: auto;
+}
+
+@font-face {
+    font-family: 'Favoritpro';
+    src: url('fonts/FavoritPro-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: auto;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    /* background-color: antiquewhite; */
+    margin: 0;
+    /* background-color: green; */
+    color: #1F1F1F;
+    padding: 3rem 6rem;
+}
+
+h1 {
+    font-size: 3rem;
+}
+
+.login-popup-wrapper {
+    /* min-height: 100vh; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-family: Favoritpro, sans-serif;
+    font-weight: 300;
+    transition-property: visibility, opacity;
+    visibility: hidden;
+}
+
+/* reset */
+.login-popup-wrapper h2,
+.login-popup-wrapper h3,
+.login-popup-wrapper p {
+    margin: 0;
+}
+
+/* */
+.overlay {
+    /* background: rgba(#333, 0.5); */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    /* background-color: purple; */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.login-popup {
+    width: 350px;
+    min-height: 250px;
+    background: #eee;
+    position: relative;
+    z-index: 2;
+    /* display: none; */
+    padding: 3rem 3rem 3rem;
+}
+
+.login-popup h2 {
+    font-size: 1.2rem;
+    margin-bottom: .25rem;
+    font-weight: 400;
+}
+
+.login-popup h3 {
+    font-size: 1.1rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.login-form .login-request-status-hint {
+    display: none;
+}
+
+.login-form.login-form--error .login-request-status-hint {
+    display: block;
+    font-size: .75rem;
+    padding: 0 0 .25rem;
+    color: #f44336;
+}
+
+.login-form--error .component.input-component .label-text-wrapper {
+    /*set error color for input's label text*/
+    color: #f44336;
+}
+
+.submit-button {
+    /* button height === input-component height */
+    width: 100%;
+    padding: 1.25rem 0;
+    cursor: pointer;
+}
