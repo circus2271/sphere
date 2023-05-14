@@ -1,0 +1,171 @@
+/* 
+.page {
+    min-height: 100vh;
+    padding: 6rem 3rem;
+  }
+  @media screen and (max-width: 767px) {
+    .page {
+      padding: 3rem 1.5rem 12rem;
+    }
+  }
+   */
+  .components .component:not(:last-of-type) {
+    margin-bottom: 1.2rem;
+  }
+  
+  .component.input-component {
+    position: relative;
+    max-width: 266.4px;
+  }
+  .component.input-component input {
+    padding: 1.75rem 1.25rem 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .component.input-component input:focus ~ .label-text-wrapper {
+    /*color: #008000;*/
+    transform: translateY(-1.15rem) scale(0.75);
+  }
+  .component.input-component.has-value input ~ .label-text-wrapper, .component.input-component.constantly-open input ~ .label-text-wrapper {
+    /*color: #008000;*/
+    transform: translateY(-1.15rem) scale(0.75);
+  }
+  .component.input-component .label-text-wrapper {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 1.25rem;
+    transition-duration: 0.3s;
+    transition-property: transform;
+    transform-origin: 0 0;
+  }
+  .component.input-component[data-prefix=search] input {
+    padding-left: 3rem;
+  }
+  .component.input-component[data-prefix=search] .label-text-wrapper {
+    left: 3rem;
+  }
+  .component.input-component[data-prefix=search] .prefix {
+    display: block;
+  }
+  .component.input-component[data-prefix=search] .prefix .icon-wrapper > span.search {
+    display: block;
+  }
+  .component.input-component[data-suffix=password] input {
+    padding-right: 3rem;
+  }
+  .component.input-component[data-suffix=password] .suffix {
+    display: block;
+  }
+  .component.input-component[data-suffix=password] .suffix button .icon {
+    display: none;
+  }
+  .component.input-component[data-suffix=password] .suffix button[data-current-icon=eye] .eye.icon {
+    display: block;
+  }
+  .component.input-component[data-suffix=password] .suffix button[data-current-icon=eye-slash] .eye-slash.icon {
+    display: block;
+  }
+  .component.input-component[data-suffix=delete] input {
+    padding-right: 3rem;
+  }
+  .component.input-component[data-suffix=delete] .suffix {
+    display: block;
+  }
+  .component.input-component[data-suffix=delete] .suffix button {
+    visibility: hidden;
+  }
+  .component.input-component[data-suffix=delete] .suffix button span.trash {
+    display: block;
+    visibility: hidden;
+  }
+  .component.input-component[data-suffix=delete].has-value .suffix button {
+    visibility: visible;
+  }
+  .component.input-component[data-suffix=delete].has-value .suffix button span.trash {
+    visibility: visible;
+  }
+  .component.input-component .prefix {
+    display: none;
+  }
+  .component.input-component .prefix .icon-wrapper {
+    position: absolute;
+    top: 50%;
+    border: none;
+    background: unset;
+    padding: 0;
+    z-index: 2;
+    transform: translateY(-50%);
+  }
+  .component.input-component .prefix .icon-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    transform: scale(1.8);
+  }
+  .component.input-component .prefix .icon-wrapper > span {
+    height: 1.25rem;
+    width: 1.25rem;
+    display: none;
+    position: relative;
+    z-index: 2;
+  }
+  .component.input-component .prefix .icon-wrapper > svg {
+    position: relative;
+    z-index: 2;
+    display: block;
+  }
+  .component.input-component .suffix {
+    display: none;
+  }
+  .component.input-component .suffix button {
+    position: absolute;
+    top: 50%;
+    border: none;
+    background: unset;
+    padding: 0;
+    z-index: 2;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+  .component.input-component .suffix button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    transition-duration: 0.2s;
+    transition-property: background-color, opacity;
+    opacity: 0;
+    z-index: 1;
+    transform: scale(1.8);
+  }
+  .component.input-component .suffix button:active::before {
+    background-color: #eee;
+    opacity: 1;
+  }
+  .component.input-component .suffix button > span {
+    height: 1.25rem;
+    width: 1.25rem;
+    position: relative;
+    z-index: 2;
+    display: none;
+  }
+  .component.input-component .suffix button > svg {
+    position: relative;
+    z-index: 2;
+    display: block;
+  }
+  .component.input-component .prefix .icon-wrapper {
+    left: 1.25rem;
+  }
+  .component.input-component .suffix button {
+    right: 1.25rem;
+  }
+  

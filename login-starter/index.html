@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login (sphere)</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="input-component/style.css">
+
+  <style>
+    @font-face {
+      font-family: 'Favoritpro';
+      src: url('fonts/FavoritPro-Light.otf') format('opentype');
+      font-weight: 300;
+      font-style: normal;
+      font-display: auto;
+    }
+
+    @font-face {
+      font-family: 'Favoritpro';
+      src: url('fonts/FavoritPro-Regular.otf') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: auto;
+    }
+
+    @font-face {
+      font-family: 'Favoritpro';
+      src: url('fonts/FavoritPro-Medium.otf') format('opentype');
+      font-weight: 500;
+      font-style: normal;
+      font-display: auto;
+    }
+
+    @font-face {
+      font-family: 'Favoritpro';
+      src: url('fonts/FavoritPro-Bold.otf') format('opentype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      /* background-color: antiquewhite; */
+      margin: 0;
+      /* background-color: green; */
+      color: #1F1F1F;
+      padding: 3rem 6rem;
+    }
+
+    h1 {
+      font-size: 3rem;
+    }
+
+    .login-popup-wrapper {
+      /* min-height: 100vh; */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      font-family: Favoritpro, sans-serif;
+      font-weight: 300;
+      transition-property: visibility, opacity;
+      visibility: hidden;
+    }
+
+    /* reset */
+    .login-popup-wrapper h2,
+    .login-popup-wrapper h3,
+    .login-popup-wrapper p {
+      margin: 0;
+    }
+
+    /* */
+    .overlay {
+      /* background: rgba(#333, 0.5); */
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      /* background-color: purple; */
+      background-color: rgba(0, 0, 0, .5);
+    }
+
+    .login-popup {
+      width: 350px;
+      min-height: 250px;
+      background: #eee;
+      position: relative;
+      z-index: 2;
+      /* display: none; */
+      padding: 3rem 3rem 3rem;
+    }
+
+    .login-popup h2 {
+      font-size: 1.2rem;
+      margin-bottom: .25rem;
+      font-weight: 400;
+    }
+
+    .login-popup h3 {
+      font-size: 1.1rem;
+      font-weight: 300;
+      margin-bottom: 1rem;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .login-form .login-request-status-hint {
+      display: none;
+    }
+
+    .login-form.login-form--error .login-request-status-hint {
+      display: block;
+      font-size: .75rem;
+      padding: 0 0 .25rem;
+      color: #f44336;
+    }
+
+    .login-form--error .component.input-component .label-text-wrapper {
+      /*set error color for input's label text*/
+      color: #f44336;
+    }
+
+    .submit-button {
+      /* button height === input-component height */
+      width: 100%;
+      padding: 1.25rem 0;
+      cursor: pointer;
+    }
+  </style>
+
+</head>
+
+<body>
+<div class="page">
+  <h1>Sphere</h1>
+  <button type="button" class="js-reset-password-button">
+    reset password
+  </button>
+  <div class="login-popup-wrapper login-popup-wrapper--hidden js-login-popup-wrapper">
+    <div class="overlay"></div>
+    <div class="login-popup">
+      <h2>Welcome!</h2>
+      <h3>Please, login.</h3>
+      <form class="login-form js-login-form">
+        <div class="component input-component js-input-component" data-suffix="password">
+          <div id="svg-templates" style="display: none;">
+            <svg id="svg-icons-wrapper" xmlns="http://www.w3.org/2000/svg">
+              <!--   https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use -->
+
+              <symbol id="search-icon" viewBox="0 0 16 16">
+                <path
+                  d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+              </symbol>
+
+              <symbol id="eye-icon" viewBox="0 0 16 16">
+                <path
+                  d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+              </symbol>
+
+              <symbol id="eye-slash-icon" viewBox="0 0 16 16">
+                <path
+                  d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
+                <path
+                  d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
+                <path
+                  d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
+              </symbol>
+
+              <symbol id="trash-icon" viewBox="0 0 16 16">
+                <path
+                  d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
+              </symbol>
+            </svg>
+          </div>
+          <div class="prefix">
+              <span class="icon-wrapper">
+                <span class="search icon">
+                  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#search-icon" fill="currentColor"></use>
+                  </svg>
+                </span>
+              </span>
+          </div>
+          <label for="password-input">
+            <input type="password" id="password-input">
+            <div class="label-text-wrapper">
+              Password
+            </div>
+          </label>
+          <div class="suffix">
+            <button type="button" data-current-icon="eye">
+                <span class="eye icon">
+                  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#eye-icon" fill="currentColor"></use>
+                  </svg>
+                </span>
+              <span class="eye-slash icon">
+                  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#eye-slash-icon" fill="currentColor"></use>
+                  </svg>
+                </span>
+              <span class="trash icon">
+                  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#trash-icon" fill="currentColor"></use>
+                  </svg>
+                </span>
+            </button>
+          </div>
+        </div>
+        <p class="login-request-status-hint js-login-request-status-hint">
+        </p>
+        <button type="submit" class="button submit-button js-submit-button">Submit password</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="libs/axios.min.js"></script>
+<!--  <script src="libs/jquery-3.5.1.min.dc5e7f18c8.js"></script>-->
+<script src="input-component/script.js"></script>
+<script src="script.js"></script>
+<script>
+  const handleLogin = async () => {
+    const loginPopupAnimationDuration = 500;
+
+    const removePopup = () => {
+      // animate popup dissapearing
+      popupWrapper.style.transitionDuration = `${loginPopupAnimationDuration}ms`;
+      popupWrapper.style.visibility = 'hidden';
+      popupWrapper.style.opacity = 0;
+      setTimeout(() => {
+        // remove popup from dom after animation ends
+        document.querySelector('.page').removeChild(popupWrapper)
+      }, loginPopupAnimationDuration)
+    }
+
+    const showPopup = () => {
+      // animate popup dissapearing
+      popupWrapper.style.transitionDuration = `${loginPopupAnimationDuration}ms`;
+      popupWrapper.style.visibility = 'visible';
+      popupWrapper.style.opacity = 1;
+    }
+
+    const resetButton = document.querySelector('.js-reset-password-button')
+    if (resetButton) resetButton.onclick = () => localStorage.setItem('password', '')
+
+    const popupWrapper = document.querySelector('.js-login-popup-wrapper'),
+      loginForm = popupWrapper.querySelector('.js-login-form'),
+      passwordInput = loginForm.querySelector('.js-input-component input');
+
+    // const requestUrlDev = 'http://localhost:3000/sphere-api-middleware'
+    const requestUrlProd = 'https://ru-1.gateway.serverless.selcloud.ru/api/v1/web/a111e1aadaa5439abf8153af6cb9d16c/default/test-gateway-api-manager'
+    const logIn = async (username, password) => {
+      return axios.post(requestUrlProd, {
+        isLoginRequest: true,
+        login: username,
+        password: password
+      })
+    }
+
+    // TODO: grab real username from a main script
+    // by now, assume username is 'test-login'
+    const username = 'test-login'
+    const password = localStorage.getItem('password');
+
+    const loginResponse = await logIn(username, password)
+    if (loginResponse.data.result === 'error') {
+      // user is not logged in
+      showPopup();
+    }
+
+    loginForm.onsubmit = async (e) => {
+      e.preventDefault();
+      console.log('form submitted')
+      const hint = document.querySelector('.js-login-request-status-hint')
+
+      const password = passwordInput.value;
+      if (password.trim().length === 0) {
+        // empty password
+        hint.innerHTML = 'Password shouldn\'t be empty'
+        loginForm.classList.add('login-form--error')
+        console.error('empty password')
+        return
+      }
+
+      const loginResponse = await logIn(username, password)
+      const { result, message } = loginResponse.data;
+      if (result === 'error') {
+        console.error(message)
+
+        hint.innerHTML = message;
+        loginForm.classList.add('login-form--error');
+        return
+      }
+
+      if (result === 'success') {
+        // save password in user's browser
+        // remove popup
+        console.log(message)
+
+        localStorage.setItem('password', password)
+        removePopup()
+      }
+    }
+  }
+  handleLogin();
+</script>
+</body>
+
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "sphere-api-gateway",
+  "version": "2.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "nodemon -L server.js",
+    "zip": "npm run clone-deps-file && npm run remove-previous-zip && npm run create-new-zip",
+    "clone-deps-file": "cp package.json serverless/src",
+    "remove-previous-zip": "rm -rf ./serverless/generated-zip/*",
+    "create-new-zip": "node utils/generate-new-zip.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "archiver": "^5.3.1",
+    "axios": "^0.26.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "nanoid": "^3.3.4",
+    "nodemon": "^2.0.15"
+  },
+  "engines": {
+    "node": "16.14.1"
+  }
+}
