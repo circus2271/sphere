@@ -131,7 +131,7 @@ functions.http('helloGET', (req, res) => {
   console.log('query:', req.query)
   console.log('aa', JSON.stringify(req.params.q))
   res.send(JSON.stringify(req.params.q));
-}); fd
+});
 // [END functions_helloworld_get]
 // functions.http('sphere-airtable-gatewahy', (req, res) => {
 //
