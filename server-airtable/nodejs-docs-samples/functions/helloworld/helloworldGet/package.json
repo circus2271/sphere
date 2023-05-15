@@ -12,6 +12,7 @@
     "node": ">=12.0.0"
   },
   "scripts": {
+    "start": "npx @google-cloud/functions-framework --target=helloGET",
     "test": "c8 mocha test/*.test.js --timeout=6000 --exit"
   },
   "dependencies": {

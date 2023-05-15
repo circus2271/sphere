@@ -8,3 +8,4 @@ api-gateway/server/.env
 server/serverless/src/package.json
 server/serverless/generated-zip/*
 .env
+coverage

@@ -26,6 +26,8 @@ const startFF = async (target, signature, port) => {
   return ff;
 };
 
+const cleanUp = ffProc => ffProc.kill();
+
 const httpInvocation = (fnUrl, port, query = {}) => {
   const baseUrl = `http://localhost:${port}`;
   const queryParams = new URLSearchParams(query);
@@ -40,14 +42,14 @@ const httpInvocation = (fnUrl, port, query = {}) => {
 
 describe('index.test.js', () => {
   describe('getRecords', () => {
-    const PORT = 8081;
+    const PORT = 8090;
     let ffProc;
     
     before(async () => {
       ffProc = await startFF('getRecords', 'http', PORT);
     });
     
-    after(() => ffProc.kill());
+    after(async () => cleanUp(ffProc));
     
     it('getRecords: should return 104 records', async () => {
       const response = await httpInvocation('getRecords', PORT, { status: '' });
@@ -69,10 +71,15 @@ describe('index.test.js', () => {
       assert.strictEqual(response.data.length, 4);
   
     })
-  
+    
     it('getRecords?status=Archived: should return 14 records', async () => {
       const response = await httpInvocation('getRecords', PORT, { status: 'Archived' });
       assert.strictEqual(response.data.length, 14);
     })
-  }).timeout(6000); // set timeout as in google cloud function starter
+  
+    it('getRecords?byakus:Fake_status: should return all (non-filtered) 104 records', async () => {
+      const response = await httpInvocation('getRecords', PORT, { byakus: 'Fake_status' });
+      assert.strictEqual(response.data.length, 104);
+    })
+  })
 })

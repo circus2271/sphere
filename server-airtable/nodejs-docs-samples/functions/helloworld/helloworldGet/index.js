@@ -22,5 +22,5 @@ const functions = require('@google-cloud/functions-framework');
 functions.http('helloGET', (req, res) => {
   // res.send('Hello World from sphere!');
   res.send('Hello World!');
-};
+});
 // [END functions_helloworld_get]

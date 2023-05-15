@@ -1,15 +1,10 @@
 {
-  "name": "nodejs-docs-samples-functions-hello-world-get",
+  "name": "getRecords",
   "version": "0.0.1",
   "private": true,
   "license": "Apache-2.0",
-  "author": "Google Inc.",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/GoogleCloudPlatform/nodejs-docs-samples.git"
-  },
+  "author": "circus2271",
   "engines": {
-    "old-node": "v18.16.0",
     "node": "v20.1.0"
   },
   "watch": {
@@ -19,7 +14,6 @@
   },
   "scripts": {
     "start": "npx @google-cloud/functions-framework --target=getRecords",
-    "start:hello-world": "npx @google-cloud/functions-framework --target=helloGET",
     "watch": "npm-watch start",
     "test": "c8 mocha test/*.test.js --timeout=6000 --exit"
   },

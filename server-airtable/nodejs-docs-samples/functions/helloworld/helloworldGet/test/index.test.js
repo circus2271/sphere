@@ -25,6 +25,8 @@ const startFF = async (target, signature, port) => {
   return ff;
 };
 
+const cleanUp = ffProc => ffProc.kill();
+
 const httpInvocation = (fnUrl, port) => {
   const baseUrl = `http://localhost:${port}`;
 
@@ -36,17 +38,17 @@ const httpInvocation = (fnUrl, port) => {
 
 describe('index.test.js', () => {
   describe('functions_helloworld_get helloGET', () => {
-    const PORT = 8081;
+    const PORT = 8084;
     let ffProc;
 
     before(async () => {
       ffProc = await startFF('helloGET', 'http', PORT);
     });
 
-    after(() => ffProc.kill());
+    // after(() => cleanUp(ffProc));
 
     it('helloGET: should print hello world', async () => {
-      const response = await httpInvocation('helloGET', PORT);
+      const response = await httpInvocation('helloGET', PORT)
       assert.strictEqual(response.status, 200);
       assert.strictEqual(response.data, 'Hello World!');
     });
