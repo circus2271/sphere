@@ -1,0 +1,38 @@
+{
+  "name": "nodejs-docs-samples-functions-hello-world-get",
+  "version": "0.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "Google Inc.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoogleCloudPlatform/nodejs-docs-samples.git"
+  },
+  "engines": {
+    "old-node": "v18.16.0",
+    "node": "v20.1.0"
+  },
+  "watch": {
+    "wat?": "npm-watch start — rerun 'npm run start' on any *.js file change",
+    "learn-more": "https://medium.com/google-cloud/hot-reload-node-cloud-functions-64ffdb095a00",
+    "start": "*.js"
+  },
+  "scripts": {
+    "start": "npx @google-cloud/functions-framework --target=getRecords",
+    "start:hello-world": "npx @google-cloud/functions-framework --target=helloGET",
+    "watch": "npm-watch start",
+    "test": "c8 mocha test/*.test.js --timeout=6000 --exit"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.1.0",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "npm-watch": "v0.11.0",
+    "c8": "^7.13.0",
+    "gaxios": "^5.0.1",
+    "mocha": "^10.0.0",
+    "wait-port": "^1.0.4",
+    "dotenv": "^16.0.0"
+  }
+}
