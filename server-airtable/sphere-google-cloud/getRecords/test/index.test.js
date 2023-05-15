@@ -64,13 +64,13 @@ describe('index.test.js', () => {
       assert.strictEqual(response.data.length, 89);
     })
     
-    it('getRecords?status=Like: should return 104 records', async () => {
+    it('getRecords?status=Like: should return 4 records', async () => {
       const response = await httpInvocation('getRecords', PORT, { status: 'Like' });
       assert.strictEqual(response.data.length, 4);
   
     })
   
-    it('getRecords?status=Archived: should return 104 records', async () => {
+    it('getRecords?status=Archived: should return 14 records', async () => {
       const response = await httpInvocation('getRecords', PORT, { status: 'Archived' });
       assert.strictEqual(response.data.length, 14);
     })
