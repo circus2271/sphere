@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "author": "circus2271",
   "engines": {
-    "node": ">=12.0.0"
+    "node": "v18.16.0"
   },
   "watch": {
     "wat?": "npm-watch start — rerun 'npm run start' on any *.js file change",
@@ -18,16 +18,16 @@
     "test": "c8 mocha test/*integration*test.js --timeout=6000 --exit"
   },
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.1.0",
+    "@google-cloud/functions-framework": "^3.2.0",
     "axios": "^1.4.0"
   },
   "devDependencies": {
-    "c8": "^7.13.0",
-    "gaxios": "^5.0.0",
-    "mocha": "^10.0.0",
-    "supertest": "^6.0.0",
-    "wait-port": "^1.0.4",
     "npm-watch": "v0.11.0",
-    "dotenv": "^16.0.0"
+    "c8": "^7.13.0",
+    "gaxios": "^5.0.1",
+    "mocha": "^10.0.0",
+    "wait-port": "^1.0.4",
+    "dotenv": "^16.0.0",
+    "supertest": "^6.0.0"
   }
 }

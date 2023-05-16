@@ -20,24 +20,24 @@ const headers = {
  */
 const getRecords = async (filterString) => {
   const allRecords = [];
-  let _offset;
+    let _offset;
   
-  do {
-    const response = await axios.get(`${AIRTABLE_API_ENDPOINT}`, {
-      headers,
-      params: {
-        offset: _offset ? _offset : '',
-        // how to filter data by key (in airtable)
-        // https://help.landbot.io/article/75ax4g3ogr-11-different-ways-to-get-and-filter-data-from-airtable#2_one_fixed_filter
-        filterByFormula: `SEARCH("${filterString || ''}",{Status})`
-      }
-    });
+    do {
+      const response = await axios.get(`${AIRTABLE_API_ENDPOINT}`, {
+        headers,
+        params: {
+          offset: _offset ? _offset : '',
+          // how to filter data by key (in airtable)
+          // https://help.landbot.io/article/75ax4g3ogr-11-different-ways-to-get-and-filter-data-from-airtable#2_one_fixed_filter
+          filterByFormula: `SEARCH("${filterString || ''}",{Status})`
+        }
+      });
     
-    const { records, offset } = response.data;
-    // console.log('offset', offset)
-    allRecords.push(...records);
-    _offset = offset;
-  } while (_offset);
+      const { records, offset } = response.data;
+      // console.log('offset', offset)
+      allRecords.push(...records);
+      _offset = offset;
+    } while (_offset);
   
   return allRecords;
 }
@@ -50,6 +50,6 @@ functions.http('getRecords', async (req, res) => {
     res.send(records)
   } catch (error) {
     console.log(error)
-    res.send({status: 500, statusText: 'server error'})
+    res.send({status: 501, statusText: 'bad request'})
   }
 });
