@@ -53,47 +53,10 @@ const patchRecord = async (recordId, updatedStatusArray) => {
   return response.data
 }
 
-// test function to run on each code change
-// if server is ready
-// const autorun = async () => {
-//   // return;
-//   const RECORD_ID = 'rec7th1mbahsx1BdT'
-//
-//   console.log('autorun function start')
-//   try {
-//     await updateRecordStatus(RECORD_ID, 'Playing')
-//     // try {
-//     //   const response = await getRecord(RECORD_ID);
-//     //   console.log('getRecord() response data:', response)
-//     // try {
-//     //   const response = await patchRecord(RECORD_ID, ['Disliked', 'Playing']);
-//     //   console.log('patchRecord() response data:', response)
-//     // try {
-//     // const records = await getFilteredRecords('L');
-//     // console.log(records);
-//     // console.log(records.length);
-//   } catch (error) {
-//     // console.error(error);
-//     const errorStatus = error.response?.status;
-//     const errorStatusText = error.response?.statusText;
-//
-//     if (errorStatus && errorStatusText) {
-//       console.error(`${errorStatus}: ${errorStatusText}`);
-//     }
-//   }
-// };
 
-
-// Register an HTTP function with the Functions Framework that will be executed
-// when you make an HTTP request to the deployed function's endpoint.
-// functions.http('helloGET', (req, res) => {
-//   res.send('Hello World! 11');
-// });
-
-
-functions.http('getRecords', async (req, res) => {
-  const status = req.query.status;
-  const records = await getRecords(status);
+functions.http('updateRecordStatus', async (req, res) => {
+  const { recordId, newStatus } = req.body
+  const updatedRecord = await updateRecordStatus(recordId, newStatus)
   
-  res.send(records)
+  res.send(updatedRecord)
 });
