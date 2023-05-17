@@ -15,7 +15,8 @@
   "scripts": {
     "start": "npx @google-cloud/functions-framework --target=updateRecordStatus",
     "watch": "npm-watch start",
-    "test": "c8 mocha test/*integration*test.js --timeout=6000 --exit"
+    "test": "c8 mocha test/*integration*test.js --timeout=6000 --exit",
+    "deploy": "gcloud functions deploy updateRecordStatus --gen2 --runtime=nodejs18 --region=europe-central2 --source=. --entry-point=updateRecordStatus --trigger-http --allow-unauthenticated"
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.1.0",
