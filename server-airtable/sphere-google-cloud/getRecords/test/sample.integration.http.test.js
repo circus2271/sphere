@@ -36,25 +36,25 @@ describe('getRecords: airtable integration test', () => {
       })
   })
   
-  it('getRecords?status=Like: should return 4 records', async () => {
+  it('getRecords?status=Like: should return 5 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ status: 'Like' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 4)
+        assert.strictEqual(response.body.length, 5)
       })
   })
   
-  it('getRecords?status=Archived: should return 14 records', async () => {
+  it('getRecords?status=Archived: should return 15 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ status: 'Archived' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 14)
+        assert.strictEqual(response.body.length, 15)
       })
   })
   

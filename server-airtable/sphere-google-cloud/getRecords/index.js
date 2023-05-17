@@ -44,12 +44,24 @@ const getRecords = async (filterString) => {
 
 
 functions.http('getRecords', async (req, res) => {
+  if (req.method !== 'GET') {
+    res.send('only GET method is supported');
+    
+    return;
+  }
+  
   const status = req.query.status;
   try {
     const records = await getRecords(status);
     res.send(records)
   } catch (error) {
-    console.log(error)
-    res.send({status: 500, statusText: 'server error'})
+    if (error instanceof axios.AxiosError) {
+      const {status, statusText } = error.response;
+      res.status(status).send(statusText);
+      
+      return;
+    }
+  
+    res.send(error);
   }
 });

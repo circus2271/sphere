@@ -30,3 +30,6 @@ gcloud functions deploy nodejs-http-function \
 --trigger-http \
 --allow-unauthenticated
 ```
+
+## about coldstarts
+https://mikhail.io/serverless/coldstarts/gcp/

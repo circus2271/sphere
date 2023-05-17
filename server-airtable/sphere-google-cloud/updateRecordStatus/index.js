@@ -24,7 +24,7 @@ const updateRecordStatus = async (recordId, newStatusSingleValueString) => {
   const currentStatusArray = record.fields.Status || []; // because empty Status is undefined by default
   
   if (currentStatusArray.includes(newStatusSingleValueString)) {
-    return;
+    return record;
   }
   
   const updatedStatusArray = [...currentStatusArray, newStatusSingleValueString];
@@ -55,8 +55,24 @@ const patchRecord = async (recordId, updatedStatusArray) => {
 
 
 functions.http('updateRecordStatus', async (req, res) => {
-  const { recordId, newStatus } = req.body
-  const updatedRecord = await updateRecordStatus(recordId, newStatus)
+  if (req.method !== 'POST') {
+    res.send('only POST method is supported');
+    
+    return;
+  }
   
-  res.send(updatedRecord)
+  const { recordId, newStatus } = req.body
+  try {
+    const updatedRecord = await updateRecordStatus(recordId, newStatus)
+    res.send(updatedRecord)
+  } catch (error) {
+    if (error instanceof axios.AxiosError) {
+      const {status, statusText } = error.response;
+      res.status(status).send(statusText);
+      
+      return;
+    }
+    
+    res.send(error);
+  }
 });
