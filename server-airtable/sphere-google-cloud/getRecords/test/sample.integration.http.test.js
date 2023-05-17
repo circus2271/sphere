@@ -4,68 +4,39 @@ const { getTestServer } = require('@google-cloud/functions-framework/testing');
 
 require('../');
 describe('getRecords: airtable integration test', () => {
-  it('getRecords: getRecords: should return 104 records', async () => {
+  it('getRecords: .get request should return 85 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 104)
+        assert.strictEqual(response.body.length, 85)
       })
   });
   
-  it('getRecords?status=Disliked: should return 4 records', async () => {
+  it('getRecords: all records should have "Playing" status and don\'t have "Disliked" status' , async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
-      .query({ status: 'Disliked' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 4)
+        const records = response.body;
+        const filteredRecords = records.filter(record =>
+          record.fields.Status.includes('Playing') && !record.fields.Status.includes('Disliked')
+        )
+        assert.strictEqual(records.length, filteredRecords.length)
       })
-  })
+  });
   
-  it('getRecords?status=Playing: should return 89 records', async () => {
+  it('getRecords: .get method should return 0 "Disliked" records' , async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
-      .query({ status: 'Playing' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 89)
+        const records = response.body;
+        const dislikedRecords = records.filter(record => record.fields.Status.includes("Disliked"))
+        assert.strictEqual(dislikedRecords.length, 0)
       })
-  })
-  
-  it('getRecords?status=Like: should return 5 records', async () => {
-    const server = getTestServer('getRecords');
-    await supertest(server)
-      .get('/')
-      .query({ status: 'Like' })
-      .expect(200)
-      .then(response => {
-        assert.strictEqual(response.body.length, 5)
-      })
-  })
-  
-  it('getRecords?status=Archived: should return 15 records', async () => {
-    const server = getTestServer('getRecords');
-    await supertest(server)
-      .get('/')
-      .query({ status: 'Archived' })
-      .expect(200)
-      .then(response => {
-        assert.strictEqual(response.body.length, 15)
-      })
-  })
-  
-  it('getRecords?byakus:Fake_status: should return all (non-filtered) 104 records', async () => {
-    const server = getTestServer('getRecords');
-    await supertest(server)
-      .get('/')
-      .query({ byakus: 'Fake_status' })
-      .expect(200)
-      .then(response => {
-        assert.strictEqual(response.body.length, 104)
-      })
-  })
+  });
 });

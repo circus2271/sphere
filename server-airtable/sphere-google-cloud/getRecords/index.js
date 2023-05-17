@@ -15,10 +15,10 @@ const headers = {
 };
 
 /**
- * Get all (or filtered) records from a table
- * @param (string) filterString (e.g. 'Playing', 'Like', 'Disliked')
+ * Get all records with "Playing" and without "Disliked" status
+ * ("Playing" && !"Disliked")
  */
-const getRecords = async (filterString) => {
+const getRecords = async () => {
   const allRecords = [];
   let _offset;
   
@@ -27,9 +27,9 @@ const getRecords = async (filterString) => {
       headers,
       params: {
         offset: _offset ? _offset : '',
-        // how to filter data by key (in airtable)
-        // https://help.landbot.io/article/75ax4g3ogr-11-different-ways-to-get-and-filter-data-from-airtable#2_one_fixed_filter
-        filterByFormula: `SEARCH("${filterString || ''}",{Status})`
+        // how to filter data by multiple keys (in airtable)
+        // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
+        filterByFormula: `AND({Status}='Playing', NOT({Status}='Disliked'))`
       }
     });
     
@@ -50,18 +50,17 @@ functions.http('getRecords', async (req, res) => {
     return;
   }
   
-  const status = req.query.status;
   try {
-    const records = await getRecords(status);
+    const records = await getRecords();
     res.send(records)
   } catch (error) {
     if (error instanceof axios.AxiosError) {
-      const {status, statusText } = error.response;
+      const { status, statusText } = error.response;
       res.status(status).send(statusText);
       
       return;
     }
-  
+    
     res.send(error);
   }
 });
