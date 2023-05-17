@@ -93,4 +93,13 @@ describe('updateRecordStatus: airtable integration test', () => {
       .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Dislike' })
       .expect(422)
   });
+  
+  
+  it('updateRecordStatus: with non-existing recordId should return 404 error', async () => {
+    const server = getTestServer('updateRecordStatus');
+    await supertest(server)
+      .post('/')
+      .send({ recordId: 'fake_recordID', newStatus: 'doesn\'t matter' })
+      .expect(404)
+  });
 });
