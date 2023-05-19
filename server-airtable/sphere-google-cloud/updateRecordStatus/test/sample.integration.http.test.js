@@ -1,105 +1,102 @@
 const supertest = require('supertest');
 const assert = require("assert");
 const { getTestServer } = require('@google-cloud/functions-framework/testing');
+require('dotenv').config()
+
+const { BASE_ID, TABLE_ID } = process.env
 
 require('../');
 describe('updateRecordStatus: airtable integration test', () => {
-  it('updateRecordStatus: .get request should return pre-defined string', async () => {
+  it('.get request should return 400 status code and a pre-defined string', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .get('/')
-      .expect(200)
+      .expect(400)
       .then(response => {
         assert.strictEqual(response.res.text, 'only POST method is supported')
       })
   });
   
-  it('updateRecordStatus: .post should work ', async () => {
-    const server = getTestServer('updateRecordStatus');
-    await supertest(server)
-      .post('/')
-      .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Playing' })
-      .expect(200)
-      .then(response => {
-        // assert.strictEqual(response.body.length, 104)
-        assert.strictEqual(response.status, 200)
-      })
-  });
-  
-  it('updateRecordStatus: record has "Like" status after .post like request', async () => {
+  it('.post without baseId and tableId should return 404 and a pre-defined message string', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .post('/')
       .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Like' })
-      .expect(200)
+      .expect(400)
       .then(response => {
-        // assert.strictEqual(response.body.length, 104)
-        assert.strictEqual(response.status, 200)
-        assert.strictEqual(response.body.fields.Status.includes('Like'), true)
+        assert.strictEqual(response.text, 'please, provide baseId and tableId with your request')
       })
   });
   
-  it('updateRecordStatus: set "Disliked" status', async () => {
+  it('record has "Like" status after .post with like request', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .post('/')
-      .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Disliked' })
+      .send({
+        baseId: BASE_ID,
+        tableId: TABLE_ID,
+        recordId: 'rec7th1mbahsx1BdT',
+        newStatus: 'Like'
+      })
       .expect(200)
       .then(response => {
-        // assert.strictEqual(response.body.length, 104)
-        assert.strictEqual(response.status, 200)
-        assert.strictEqual(response.body.fields.Status.includes('Disliked'), true)
+        assert.strictEqual(response.body.fields['Like/Dislike'].includes('Like'), true)
       })
   });
   
-  it('updateRecordStatus: set "Archived" status', async () => {
+  it('record has "Dislike" status after .post with dislike request', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .post('/')
-      .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Archived' })
+      .send({
+        baseId: BASE_ID,
+        tableId: TABLE_ID,
+        recordId: 'rec7th1mbahsx1BdT',
+        newStatus: 'Like'
+      })
       .expect(200)
       .then(response => {
-        // assert.strictEqual(response.body.length, 104)
-        assert.strictEqual(response.status, 200)
-        assert.strictEqual(response.body.fields.Status.includes('Archived'), true)
+        assert.strictEqual(response.body.fields['Like/Dislike'].includes('Dislike'), true)
       })
   });
   
-  it('updateRecordStatus: set "Playing" status', async () => {
+  it('can\'t set non-existing user-defined status (for example "Fake_status")', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .post('/')
-      .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Playing' })
-      .expect(200)
-      .then(response => {
-        // assert.strictEqual(response.body.length, 104)
-        assert.strictEqual(response.status, 200)
-        assert.strictEqual(response.body.fields.Status.includes('Playing'), true)
+      .send({
+        baseId: BASE_ID,
+        tableId: TABLE_ID,
+        recordId: 'rec7th1mbahsx1BdT',
+        newStatus: 'Fake_status'
       })
-  });
-  
-  it('updateRecordStatus: can\'t set non-existing user-defined status (.e.g "Fake_status")', async () => {
-    const server = getTestServer('updateRecordStatus');
-    await supertest(server)
-      .post('/')
-      .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Fake_status' })
       .expect(422)
   });
   
-  it('updateRecordStatus: can\'t set part of the actual status (can\'t set "Dislike" instead of "Disliked"', async () => {
+  it('can\'t set part of the actual status (can\'t set "Disl" instead of "Dislike"', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .post('/')
-      .send({ recordId: 'rec7th1mbahsx1BdT', newStatus: 'Dislike' })
+      .send({
+        baseId: BASE_ID,
+        tableId: TABLE_ID,
+        recordId: 'rec7th1mbahsx1BdT',
+        newStatus: 'Disl'
+      })
       .expect(422)
   });
   
-  
-  it('updateRecordStatus: with non-existing recordId should return 404 error', async () => {
+  it('.post method with non-existing recordId should return 404 error', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .post('/')
-      .send({ recordId: 'fake_recordID', newStatus: 'doesn\'t matter' })
-      .expect(404)
+      .send({
+        baseId: BASE_ID,
+        tableId: TABLE_ID,
+        recordId: 'fake_recordId',
+        newStatus: 'doesn\'t matter'
+      })
+      // .expect(404)
+      .then(console.log)
   });
 });

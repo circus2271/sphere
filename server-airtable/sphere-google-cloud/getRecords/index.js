@@ -2,20 +2,24 @@ const functions = require('@google-cloud/functions-framework');
 const axios = require('axios');
 require('dotenv').config()
 
-const {
-  API_KEY,
-  BASE_ID,
-  TABLE_ID,
-} = process.env
+const { API_KEY } = process.env
 
-const AIRTABLE_API_ENDPOINT = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+let airtableApiEndpoint;
+
+const setApiUrl = ({baseId, tableId}) => {
+  if (!baseId || !tableId) {
+    throw new Error('please, provide baseId and tableId with your request');
+  }
+  
+  airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
+}
 
 const headers = {
   'Authorization': `Bearer ${API_KEY}`,
 };
 
 /**
- * Get all records with "Playing" and without "Disliked" status
+ * Get all records with "Playing" and without "Dislike" status
  * ("Playing" && !"Disliked")
  */
 const getRecords = async () => {
@@ -23,18 +27,17 @@ const getRecords = async () => {
   let _offset;
   
   do {
-    const response = await axios.get(`${AIRTABLE_API_ENDPOINT}`, {
+    const response = await axios.get(`${airtableApiEndpoint}`, {
       headers,
       params: {
         offset: _offset ? _offset : '',
         // how to filter data by multiple keys (in airtable)
         // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
-        filterByFormula: `AND({Status}='Playing', NOT({Status}='Disliked'))`
+        filterByFormula: `AND({Status}='Playing', NOT({Like/Dislike}='Dislike'))`
       }
     });
-    
+  
     const { records, offset } = response.data;
-    // console.log('offset', offset)
     allRecords.push(...records);
     _offset = offset;
   } while (_offset);
@@ -44,10 +47,12 @@ const getRecords = async () => {
 
 
 functions.http('getRecords', async (req, res) => {
-  if (req.method !== 'GET') {
-    res.send('only GET method is supported');
-    
-    return;
+  if (req.method !== 'GET') return res.status(400).send('only GET method is supported');
+  
+  try {
+    setApiUrl(req.query);
+  } catch (error) {
+     return res.status(400).send(error.message);
   }
   
   try {
@@ -56,11 +61,10 @@ functions.http('getRecords', async (req, res) => {
   } catch (error) {
     if (error instanceof axios.AxiosError) {
       const { status, statusText } = error.response;
-      res.status(status).send(statusText);
-      
-      return;
+      return res.status(status).send(statusText);
     }
     
     res.send(error);
   }
 });
+

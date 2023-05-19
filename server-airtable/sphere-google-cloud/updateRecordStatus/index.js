@@ -2,13 +2,17 @@ const functions = require('@google-cloud/functions-framework');
 const axios = require('axios');
 require('dotenv').config()
 
-const {
-  API_KEY,
-  BASE_ID,
-  TABLE_ID,
-} = process.env
+const { API_KEY } = process.env
 
-const AIRTABLE_API_ENDPOINT = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+let airtableApiEndpoint;
+
+const setApiUrl = ({ baseId, tableId }) => {
+  if (!baseId || !tableId) {
+    throw new Error('please, provide baseId and tableId with your request')
+  }
+  
+  airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
+}
 
 const headers = {
   'Authorization': `Bearer ${API_KEY}`,
@@ -17,11 +21,11 @@ const headers = {
 /**
  *
  * @param (string) recordId
- * @param (string) newStatusSingleValueString (e.g. 'Playing', 'Like', 'Dislike')
+ * @param (string) newStatusSingleValueString (for example, 'Like', 'Dislike')
  */
 const updateRecordStatus = async (recordId, newStatusSingleValueString) => {
   const record = await getRecord(recordId);
-  const currentStatusArray = record.fields.Status || []; // because empty Status is undefined by default
+  const currentStatusArray = record.fields['Like/Dislike'] || []; // because empty 'Like/Dislike' field is undefined by default
   
   if (currentStatusArray.includes(newStatusSingleValueString)) {
     return record;
@@ -34,7 +38,7 @@ const updateRecordStatus = async (recordId, newStatusSingleValueString) => {
 }
 
 const getRecord = async (recordId) => {
-  const response = await axios.get(`${AIRTABLE_API_ENDPOINT}/${recordId}`, {
+  const response = await axios.get(`${airtableApiEndpoint}/${recordId}`, {
     headers,
   })
   
@@ -42,9 +46,9 @@ const getRecord = async (recordId) => {
 }
 
 const patchRecord = async (recordId, updatedStatusArray) => {
-  const response = await axios.patch(`${AIRTABLE_API_ENDPOINT}/${recordId}`, {
+  const response = await axios.patch(`${airtableApiEndpoint}/${recordId}`, {
     fields: {
-      Status: updatedStatusArray
+      'Like/Dislike': updatedStatusArray
     }
   }, {
     headers
@@ -55,10 +59,12 @@ const patchRecord = async (recordId, updatedStatusArray) => {
 
 
 functions.http('updateRecordStatus', async (req, res) => {
-  if (req.method !== 'POST') {
-    res.send('only POST method is supported');
-    
-    return;
+  if (req.method !== 'POST') return res.status(400).send('only POST method is supported');
+  
+  try {
+    setApiUrl(req.body);
+  } catch (error) {
+    return res.status(400).send(error.message);
   }
   
   const { recordId, newStatus } = req.body
@@ -67,10 +73,8 @@ functions.http('updateRecordStatus', async (req, res) => {
     res.send(updatedRecord)
   } catch (error) {
     if (error instanceof axios.AxiosError) {
-      const {status, statusText } = error.response;
-      res.status(status).send(statusText);
-      
-      return;
+      const { status, statusText } = error.response;
+      return res.status(status).send(statusText);
     }
     
     res.send(error);
