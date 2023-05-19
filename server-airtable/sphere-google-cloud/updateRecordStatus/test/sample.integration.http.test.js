@@ -28,6 +28,20 @@ describe('updateRecordStatus: airtable integration test', () => {
       })
   });
   
+  it('.post request has no recordId and/or no newStatus', async () => {
+    const server = getTestServer('updateRecordStatus');
+    await supertest(server)
+      .post('/')
+      .send({
+        baseId: BASE_ID,
+        tableId: TABLE_ID,
+      })
+      .expect(400)
+      .then(response => {
+        assert.strictEqual(response.text, 'please, provide recordId and a new status (newStatus) with your request')
+      })
+  });
+  
   it('record has "Like" status after .post with like request', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
@@ -96,7 +110,6 @@ describe('updateRecordStatus: airtable integration test', () => {
         recordId: 'fake_recordId',
         newStatus: 'doesn\'t matter'
       })
-      // .expect(404)
-      .then(console.log)
+      .expect(404)
   });
 });

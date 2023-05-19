@@ -68,6 +68,10 @@ functions.http('updateRecordStatus', async (req, res) => {
   }
   
   const { recordId, newStatus } = req.body
+  if (!recordId || !newStatus) {
+    return res.status(400).send('please, provide recordId and a new status (newStatus) with your request')
+  }
+  
   try {
     const updatedRecord = await updateRecordStatus(recordId, newStatus)
     res.send(updatedRecord)
