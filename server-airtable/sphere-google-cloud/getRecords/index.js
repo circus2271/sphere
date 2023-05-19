@@ -49,6 +49,11 @@ const getRecords = async () => {
 }
 
 
+const getAvailablePlaylists = async () => {
+  const response = await axios.get(airtableApiEndpoint, { headers });
+  return response.data;
+}
+
 functions.http('getRecords', async (req, res) => {
   if (req.method !== 'GET') return res.status(400).send('only GET method is supported');
   
@@ -59,6 +64,11 @@ functions.http('getRecords', async (req, res) => {
   }
   
   try {
+    if (req.query.tableId === 'Info') {
+      const playlists = await getAvailablePlaylists()
+      return res.send(playlists)
+    }
+    
     const records = await getRecords();
     res.send(records)
   } catch (error) {

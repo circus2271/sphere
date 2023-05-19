@@ -17,6 +17,17 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
+  it('.get request to a "Info" table should return 2 records', async () => {
+    const server = getTestServer('getRecords');
+    await supertest(server)
+      .get('/')
+      .query({ baseId: BASE_ID, tableId: 'Info' })
+      .expect(200)
+      .then(response => {
+        assert.strictEqual(response.body['records'].length, 2)
+      })
+  });
+  
   it('.get request with right parameters should return 85 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
