@@ -17,14 +17,30 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get request to a "Info" table should return 2 records', async () => {
+  it('.get request to a "Info" table should return 1 record', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: 'Info' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body['records'].length, 2)
+        assert.strictEqual(response.body['records'].length, 1)
+      })
+  });
+  
+  it('.get request to a "Info" should contain 1 "Active" record and 0 "Archived" records', async () => {
+    const server = getTestServer('getRecords');
+    await supertest(server)
+      .get('/')
+      .query({ baseId: BASE_ID, tableId: 'Info' })
+      .expect(200)
+      .then(response => {
+        const records = response.body['records'];
+        const activeRecords = records.filter(record => record.fields['Status'].includes('Active'))
+        const archivedRecords = records.filter(record => record.fields['Status'].includes('Archived'))
+  
+        assert.strictEqual(activeRecords.length, 1)
+        assert.strictEqual(archivedRecords.length, 0)
       })
   });
   

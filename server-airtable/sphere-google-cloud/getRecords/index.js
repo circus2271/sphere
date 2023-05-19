@@ -50,7 +50,19 @@ const getRecords = async () => {
 
 
 const getAvailablePlaylists = async () => {
-  const response = await axios.get(airtableApiEndpoint, { headers });
+  const response = await axios.get(airtableApiEndpoint, {
+    headers,
+    params: {
+      // how to filter data by multiple keys (in airtable)
+      // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
+  
+      // how to check if value contains in a field
+      // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#4_search_filter_contains_value_in_cell_column
+      
+      // Status === 'Active' && !Status['Archived']
+      filterByFormula: `AND({Status}='Active', FIND('Archived', Status)=0)`
+    }
+  });
   return response.data;
 }
 
