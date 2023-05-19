@@ -28,7 +28,7 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('all records should have "Playing" status and don\'t have "Disliked" status', async () => {
+  it('all records should have "Playing" status and don\'t have "Dislike" status', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
@@ -46,7 +46,7 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get method should return 0 "Disliked" records', async () => {
+  it('.get method should return 0 "Dislike" records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')

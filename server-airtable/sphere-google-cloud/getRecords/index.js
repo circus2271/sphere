@@ -20,7 +20,7 @@ const headers = {
 
 /**
  * Get all records with "Playing" and without "Dislike" status
- * ("Playing" && !"Disliked")
+ * ("Playing" && !"Dislike")
  */
 const getRecords = async () => {
   const allRecords = [];
