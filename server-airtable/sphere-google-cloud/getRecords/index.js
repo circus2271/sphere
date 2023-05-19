@@ -63,7 +63,9 @@ const getAvailablePlaylists = async () => {
       filterByFormula: `AND({Status}='Active', FIND('Archived', Status)=0)`
     }
   });
-  return response.data;
+  
+  const { records } = response.data;
+  return records;
 }
 
 functions.http('getRecords', async (req, res) => {
