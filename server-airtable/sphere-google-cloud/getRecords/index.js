@@ -33,7 +33,10 @@ const getRecords = async () => {
         offset: _offset ? _offset : '',
         // how to filter data by multiple keys (in airtable)
         // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
-        filterByFormula: `AND({Status}='Playing', NOT({Like/Dislike}='Dislike'))`
+        
+        // how to check if value contain in a field
+        // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#4_search_filter_contains_value_in_cell_column
+        filterByFormula: `AND({Status}='Playing', FIND('Dislike',{Like/Dislike})=0)`
       }
     });
   

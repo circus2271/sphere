@@ -17,14 +17,14 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get request with right parameters should return 87 records', async () => {
+  it('.get request with right parameters should return 85 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: TABLE_ID })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 87)
+        assert.strictEqual(response.body.length, 85)
       })
   });
   
@@ -36,9 +36,12 @@ describe('getRecords: airtable integration test', () => {
       .expect(200)
       .then(response => {
         const records = response.body;
-        const filteredRecords = records.filter(record =>
-          record.fields.Status.includes('Playing') && !record.fields.Status.includes('Disliked')
-        )
+        const filteredRecords = records.filter(record => {
+          const statusField = record.fields['Status'] || [];
+          const likeDislikeField = record.fields['Like/Dislike'] || [];
+
+          return statusField.includes('Playing') && !likeDislikeField.includes('Dislike')
+        })
         assert.strictEqual(records.length, filteredRecords.length)
       })
   });
@@ -51,7 +54,7 @@ describe('getRecords: airtable integration test', () => {
       .expect(200)
       .then(response => {
         const records = response.body;
-        const dislikedRecords = records.filter(record => record.fields.Status.includes("Disliked"))
+        const dislikedRecords = records.filter(record => (record.fields['Like/Dislike'] || []).includes("Dislike"))
         assert.strictEqual(dislikedRecords.length, 0)
       })
   });
