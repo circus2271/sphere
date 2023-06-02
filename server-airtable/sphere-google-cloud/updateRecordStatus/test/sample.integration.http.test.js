@@ -3,17 +3,17 @@ const assert = require("assert");
 const { getTestServer } = require('@google-cloud/functions-framework/testing');
 require('dotenv').config()
 
-const { BASE_ID, TABLE_ID } = process.env
+const { BASE_ID, TABLE_ID, ALLOWED_ORIGIN } = process.env
 
 require('../');
 describe('updateRecordStatus: airtable integration test', () => {
-  it('.get request should return 400 status code and a pre-defined string', async () => {
+  it('"not .post" and "not OPTIONS" http request methods should return 400 status code and a pre-defined string', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .get('/')
       .expect(400)
       .then(response => {
-        assert.strictEqual(response.res.text, 'only POST method is supported')
+        assert.strictEqual(response.res.text, 'only POST and OPTIONS HTTP request methods are supported')
       })
   });
   
@@ -111,5 +111,16 @@ describe('updateRecordStatus: airtable integration test', () => {
         newStatus: 'doesn\'t matter'
       })
       .expect(404)
+  });
+  
+  it('OPTIONS http request method should return 204 status code and necessary headers', async () => {
+    const server = getTestServer('updateRecordStatus');
+    await supertest(server)
+      .options('/')
+      .expect(204)
+      .then(response => {
+        // response headers are converted to lowercase
+        assert.strictEqual(response.headers['access-control-allow-origin'], ALLOWED_ORIGIN)
+      })
   });
 });

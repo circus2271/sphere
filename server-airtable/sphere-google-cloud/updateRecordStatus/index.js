@@ -2,7 +2,7 @@ const functions = require('@google-cloud/functions-framework');
 const axios = require('axios');
 require('dotenv').config()
 
-const { API_KEY } = process.env
+const { API_KEY, ALLOWED_ORIGIN } = process.env
 
 let airtableApiEndpoint;
 
@@ -59,7 +59,11 @@ const patchRecord = async (recordId, updatedStatusArray) => {
 
 
 functions.http('updateRecordStatus', async (req, res) => {
-  if (req.method !== 'POST') return res.status(400).send('only POST method is supported');
+  // https://cloud.google.com/functions/docs/samples/functions-http-cors
+  res.set('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  
+  if (req.method === 'OPTIONS') return res.status(204).send('');
+  if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS HTTP request methods are supported');
   
   try {
     setApiUrl(req.body);
