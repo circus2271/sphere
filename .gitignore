@@ -9,3 +9,4 @@ server/serverless/src/package.json
 server/serverless/generated-zip/*
 .env
 coverage
+sphere_firestore_service_acc_info.json
