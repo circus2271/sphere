@@ -94,5 +94,16 @@ describe('login: google cloud integration test', () => {
           assert.strictEqual(response.text, 'successfully logged in, bot there is no baseId to send')
         })
     })
+  
+    it('non-latin characters in login shouldn\'t break anything', async () => {
+      const server = getTestServer('login')
+      await supertest(server)
+        .post('/')
+        .send({
+          login: 'Piñata',
+          password: 'pass'
+        })
+        .expect(200)
+    })
   })
-});
+})
