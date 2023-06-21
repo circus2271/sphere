@@ -1,18 +1,12 @@
 const functions = require('@google-cloud/functions-framework');
 const Firestore = require('@google-cloud/firestore');
-const axios = require('axios');
 require('dotenv').config()
 
 const {
   ALLOWED_ORIGIN,
   PROJECT_ID,
-  GOOGLE_APPLICATION_CREDENTIALS,
-  GET_RECORDS_API_ENDPOINT
+  GOOGLE_APPLICATION_CREDENTIALS
 } = process.env
-
-// const login = 'test1111';
-// const login = 'Piñata';
-// const password = 'pass';
 
 const db = new Firestore({
   projectId: PROJECT_ID,
@@ -27,11 +21,16 @@ functions.http('login', async (req, res) => {
   if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS HTTP request methods are supported');
   
   const { login, password } = req.body
+  
+  if (!login || !password) {
+    return res.status(400).send('request body should contain non-empty login and password')
+  }
+  
   const userRef = db.collection('users').doc(login);
   const doc = await userRef.get()
   
   if (!doc.exists) {
-    return res.status(400).send('user with this login doesn\'t exist')
+    return res.status(401).send('user with this login doesn\'t exist')
   }
   
   const user = doc.data()
@@ -43,9 +42,9 @@ functions.http('login', async (req, res) => {
       return res.status(200).send(baseId)
     }
     
-    return res.status(400).send('successfully logged in, bot there is no baseId to send ')
+    return res.status(404).send('successfully logged in, bot there is no baseId to send')
   }
   
-  return res.status(403).send('wrong password')
+  return res.status(401).send('wrong password')
 });
 
