@@ -91,7 +91,7 @@ describe('login: google cloud integration test', () => {
         })
         .expect(404)
         .then(response => {
-          assert.strictEqual(response.text, 'successfully logged in, bot there is no baseId to send')
+          assert.strictEqual(response.text, 'successfully logged in, but there is no baseId to send')
         })
     })
   

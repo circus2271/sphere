@@ -42,7 +42,7 @@ functions.http('login', async (req, res) => {
       return res.status(200).send(baseId)
     }
     
-    return res.status(404).send('successfully logged in, bot there is no baseId to send')
+    return res.status(404).send('successfully logged in, but there is no baseId to send')
   }
   
   return res.status(401).send('wrong password')
