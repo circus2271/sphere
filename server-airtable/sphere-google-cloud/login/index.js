@@ -30,34 +30,22 @@ functions.http('login', async (req, res) => {
   const userRef = db.collection('users').doc(login);
   const doc = await userRef.get()
   
-  
   if (!doc.exists) {
-    console.log('No matching documents.');
-    return res.send('empty dataset');
+    return res.status(400).send('user with this login doesn\'t exist')
   }
   
   const user = doc.data()
   
-  if (user.password !== password) {
-    // user is not logged in
-    // send error to a client
-    return res.status(403).send('user is not logged in')
+  if (user.password === password) {
+    const { baseId } = user;
+    
+    if (baseId) {
+      return res.status(200).send(baseId)
+    }
+    
+    return res.status(400).send('successfully logged in, bot there is no baseId to send ')
   }
   
-  //  user is logged in
-  //  send him playlists and a baseId
-  const baseId = user.baseId
-  const { data: playlists } = await axios(GET_RECORDS_API_ENDPOINT, {
-    params: {
-      baseId,
-      tableId: 'Info' // this table has information about playlists.
-    }
-  })
-  
-  // https://getrecords-pxkzcjm4rq-lm.a.run.app/?baseId=app62dBMf9YymVKP6&tableId=tbl886QoG6g0tC9tV
-  
-  const playlistNames = playlists.map(playlist => playlist.fields['Name'])
-  console.log(playlistNames)
-  res.send('passw: ' + user.password)
+  return res.status(403).send('wrong password')
 });
 
