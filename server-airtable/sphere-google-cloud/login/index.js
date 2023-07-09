@@ -3,19 +3,23 @@ const Firestore = require('@google-cloud/firestore');
 require('dotenv').config()
 
 const {
-  ALLOWED_ORIGIN,
+  ALLOWED_ORIGINS_JSON,
   PROJECT_ID,
   GOOGLE_APPLICATION_CREDENTIALS
 } = process.env
 
+const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
 const db = new Firestore({
   projectId: PROJECT_ID,
   keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
 });
 
 functions.http('login', async (req, res) => {
-  // https://cloud.google.com/functions/docs/samples/functions-http-cors
-  res.set('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  const { origin } = req.headers;
+  if (allowedOrigins.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  }
   
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS HTTP request methods are supported');

@@ -3,7 +3,9 @@ const assert = require("assert");
 const { getTestServer } = require('@google-cloud/functions-framework/testing');
 require('dotenv').config()
 
-const { ALLOWED_ORIGIN } = process.env
+const { ALLOWED_ORIGINS_JSON } = process.env
+const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
+
 
 require('../');
 describe('login: google cloud integration test', () => {
@@ -17,14 +19,24 @@ describe('login: google cloud integration test', () => {
       })
   });
   
-  it('OPTIONS http request method should return 204 status code and necessary headers', async () => {
+  it('OPTIONS http request method should return 204 status code', async () => {
     const server = getTestServer('login');
     await supertest(server)
       .options('/')
       .expect(204)
+  });
+  
+  it('sphere main player domain is allowed for cors and "Content-Type" header is allowed', async () => {
+    const mainPlayerOrigin = 'https://player.sphere.care';
+    
+    const server = getTestServer('login');
+    await supertest(server)
+      .options('/')
+      .set('origin', mainPlayerOrigin)
       .then(response => {
-        // response headers are converted to lowercase
-        assert.strictEqual(response.headers['access-control-allow-origin'], ALLOWED_ORIGIN)
+        // response headers are converted to lowercase, but their values aren't
+        assert.strictEqual(response.headers['access-control-allow-origin'], mainPlayerOrigin)
+        assert.strictEqual(response.headers['access-control-allow-headers'], 'Content-Type')
       })
   });
   
