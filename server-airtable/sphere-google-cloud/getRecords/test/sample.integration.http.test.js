@@ -3,7 +3,9 @@ const assert = require("assert");
 const { getTestServer } = require('@google-cloud/functions-framework/testing');
 require('dotenv').config()
 
-const { BASE_ID, TABLE_ID, ALLOWED_ORIGIN } = process.env
+const { BASE_ID, TABLE_ID, ALLOWED_ORIGINS_JSON } = process.env
+const mainAllowedOrigin = JSON.parse(ALLOWED_ORIGINS_JSON)[0]
+
 
 require('../');
 describe('getRecords: airtable integration test', () => {
@@ -17,18 +19,18 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get request to a "Info" table should return 1 record', async () => {
+  it('.get request to a "Info" table should return 2 record', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: 'Info' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 1)
+        assert.strictEqual(response.body.length, 2)
       })
   });
   
-  it('.get request to a "Info" table should contain 1 "Active" record and 0 "Archived" records', async () => {
+  it('.get request to a "Info" table should contain 2 "Active" record and 0 "Archived" records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
@@ -39,19 +41,19 @@ describe('getRecords: airtable integration test', () => {
         const activeRecords = records.filter(record => record.fields['Status'].includes('Active'))
         const archivedRecords = records.filter(record => record.fields['Status'].includes('Archived'))
   
-        assert.strictEqual(activeRecords.length, 1)
+        assert.strictEqual(activeRecords.length, 2)
         assert.strictEqual(archivedRecords.length, 0)
       })
   });
   
-  it('.get request with right parameters should return 85 records', async () => {
+  it('.get request with right parameters should return 86 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: TABLE_ID })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 85)
+        assert.strictEqual(response.body.length, 86)
       })
   });
   
@@ -92,18 +94,26 @@ describe('getRecords: airtable integration test', () => {
       .post('/')
       .expect(400)
       .then(response => {
-        assert.strictEqual(response.text, 'only GET and OPTIONS HTTP request methods are supported')
+        assert.strictEqual(response.text, 'only GET and OPTIONS http request methods are supported')
       })
   });
   
-  it('OPTIONS http request method should return 204 status code and necessary headers', async () => {
+  it('OPTIONS http request method should return 204 status code', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .options('/')
       .expect(204)
+  });
+  
+  it('sphere main player domain is allowed for cors and "Content-Type" header is allowed', async () => {
+    const server = getTestServer('getRecords');
+    await supertest(server)
+      .options('/')
+      .set('origin', mainAllowedOrigin)
       .then(response => {
-        // response headers are converted to lowercase
-        assert.strictEqual(response.headers['access-control-allow-origin'], ALLOWED_ORIGIN)
+        // response headers are converted to lowercase, but their values aren't
+        assert.strictEqual(response.headers['access-control-allow-origin'], mainAllowedOrigin)
+        assert.strictEqual(response.headers['access-control-allow-headers'], 'Content-Type')
       })
   });
 });

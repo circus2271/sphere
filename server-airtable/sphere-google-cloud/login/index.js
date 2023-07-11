@@ -16,13 +16,14 @@ const db = new Firestore({
 
 functions.http('login', async (req, res) => {
   const { origin } = req.headers;
+  
   if (allowedOrigins.includes(origin)) {
     res.set('Access-Control-Allow-Origin', origin);
     res.set('Access-Control-Allow-Headers', 'Content-Type');
   }
   
   if (req.method === 'OPTIONS') return res.status(204).send('');
-  if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS HTTP request methods are supported');
+  if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS http request methods are supported');
   
   const { login, password } = req.body
   

@@ -3,7 +3,9 @@ const assert = require("assert");
 const { getTestServer } = require('@google-cloud/functions-framework/testing');
 require('dotenv').config()
 
-const { BASE_ID, TABLE_ID, ALLOWED_ORIGIN } = process.env
+const { BASE_ID, TABLE_ID, ALLOWED_ORIGINS_JSON } = process.env
+const mainAllowedOrigin = JSON.parse(ALLOWED_ORIGINS_JSON)[0];
+
 
 require('../');
 describe('updateRecordStatus: airtable integration test', () => {
@@ -13,7 +15,7 @@ describe('updateRecordStatus: airtable integration test', () => {
       .get('/')
       .expect(400)
       .then(response => {
-        assert.strictEqual(response.res.text, 'only POST and OPTIONS HTTP request methods are supported')
+        assert.strictEqual(response.res.text, 'only POST and OPTIONS http request methods are supported')
       })
   });
   
@@ -113,14 +115,22 @@ describe('updateRecordStatus: airtable integration test', () => {
       .expect(404)
   });
   
-  it('OPTIONS http request method should return 204 status code and necessary headers', async () => {
+  it('OPTIONS http request method should return 204 status code', async () => {
     const server = getTestServer('updateRecordStatus');
     await supertest(server)
       .options('/')
       .expect(204)
+  });
+  
+  it('sphere main player domain is allowed for cors and "Content-Type" header is allowed', async () => {
+    const server = getTestServer('updateRecordStatus');
+    await supertest(server)
+      .options('/')
+      .set('origin', mainAllowedOrigin)
       .then(response => {
-        // response headers are converted to lowercase
-        assert.strictEqual(response.headers['access-control-allow-origin'], ALLOWED_ORIGIN)
+        // response headers are converted to lowercase, but their values aren't
+        assert.strictEqual(response.headers['access-control-allow-origin'], mainAllowedOrigin)
+        assert.strictEqual(response.headers['access-control-allow-headers'], 'Content-Type')
       })
   });
 });

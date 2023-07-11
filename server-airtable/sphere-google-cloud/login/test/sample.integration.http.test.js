@@ -4,7 +4,7 @@ const { getTestServer } = require('@google-cloud/functions-framework/testing');
 require('dotenv').config()
 
 const { ALLOWED_ORIGINS_JSON } = process.env
-const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
+const mainAllowedOrigin = JSON.parse(ALLOWED_ORIGINS_JSON)[0];
 
 
 require('../');
@@ -15,7 +15,7 @@ describe('login: google cloud integration test', () => {
       .get('/')
       .expect(400)
       .then(response => {
-        assert.strictEqual(response.text, 'only POST and OPTIONS HTTP request methods are supported')
+        assert.strictEqual(response.text, 'only POST and OPTIONS http request methods are supported')
       })
   });
   
@@ -27,15 +27,13 @@ describe('login: google cloud integration test', () => {
   });
   
   it('sphere main player domain is allowed for cors and "Content-Type" header is allowed', async () => {
-    const mainPlayerOrigin = 'https://player.sphere.care';
-    
     const server = getTestServer('login');
     await supertest(server)
       .options('/')
-      .set('origin', mainPlayerOrigin)
+      .set('origin', mainAllowedOrigin)
       .then(response => {
         // response headers are converted to lowercase, but their values aren't
-        assert.strictEqual(response.headers['access-control-allow-origin'], mainPlayerOrigin)
+        assert.strictEqual(response.headers['access-control-allow-origin'], mainAllowedOrigin)
         assert.strictEqual(response.headers['access-control-allow-headers'], 'Content-Type')
       })
   });
