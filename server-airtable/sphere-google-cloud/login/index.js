@@ -41,13 +41,13 @@ functions.http('login', async (req, res) => {
   const user = doc.data()
   
   if (user.password === password) {
-    const { baseId } = user;
+    const { baseId, placeName } = user;
     
-    if (baseId) {
-      return res.status(200).send(baseId)
+    if (!baseId || !placeName) {
+      return res.status(404).send('successfully logged in, but there is no baseId or no placeName to send')
     }
     
-    return res.status(404).send('successfully logged in, but there is no baseId to send')
+    return res.status(200).send({ baseId, placeName })
   }
   
   return res.status(401).send('wrong password')

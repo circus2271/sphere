@@ -77,7 +77,7 @@ describe('login: google cloud integration test', () => {
         })
     })
     
-    it('request with existing user and correct password should return 200 and a baseId', async () => {
+    it('request with existing user and correct password should return 200 and a baseId and a placeName', async () => {
       const server = getTestServer('login')
       await supertest(server)
         .post('/')
@@ -87,11 +87,13 @@ describe('login: google cloud integration test', () => {
         })
         .expect(200)
         .then(response => {
-          assert.strictEqual(response.text, 'test-baseId-value')
+          const { baseId, placeName } = response.body;
+          assert.strictEqual(baseId, 'test-baseId-value')
+          assert.strictEqual(placeName, 'default-placeName')
         })
     })
     
-    it('if login is correct but there is no baseId in a firestore request should return 404 and a pre-defined string', async () => {
+    it('if login is correct but there is no baseId or no placeName in a firestore request should return 404 and a pre-defined string', async () => {
       const server = getTestServer('login')
       await supertest(server)
         .post('/')
@@ -101,7 +103,7 @@ describe('login: google cloud integration test', () => {
         })
         .expect(404)
         .then(response => {
-          assert.strictEqual(response.text, 'successfully logged in, but there is no baseId to send')
+          assert.strictEqual(response.text, 'successfully logged in, but there is no baseId or no placeName to send')
         })
     })
   
@@ -114,6 +116,11 @@ describe('login: google cloud integration test', () => {
           password: 'pass'
         })
         .expect(200)
+        .then(response => {
+          const { baseId, placeName } = response.body;
+          assert.strictEqual(baseId, 'Piñata baseId')
+          assert.strictEqual(placeName, 'default-Pinata-placeName')
+        })
     })
   })
 })
