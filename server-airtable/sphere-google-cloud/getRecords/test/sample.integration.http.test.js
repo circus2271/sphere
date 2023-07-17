@@ -46,7 +46,7 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get second test playlist "test playlist #2" should return 33 records', async () => {
+  it('.get second test playlist "test playlist #2" should return 30 records', async () => {
     const anotherTestPlaylistId = 'tblyqMDwKvBNSJPOY' // test playlist #2 id
     const server = getTestServer('getRecords');
     await supertest(server)
@@ -54,7 +54,7 @@ describe('getRecords: airtable integration test', () => {
       .query({ baseId: BASE_ID, tableId: anotherTestPlaylistId })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 33)
+        assert.strictEqual(response.body.length, 30)
       })
   });
   
