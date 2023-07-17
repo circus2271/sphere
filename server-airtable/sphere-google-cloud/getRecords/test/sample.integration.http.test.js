@@ -19,18 +19,18 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get request to a "Info" table should return 2 record', async () => {
+  it('.get request to a "Info" table should return 4 records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: 'Info' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 2)
+        assert.strictEqual(response.body.length, 4)
       })
   });
   
-  it('.get request to a "Info" table should contain 2 "Active" record and 0 "Archived" records', async () => {
+  it('.get request to a "Info" table should contain 4 "Active" records and 0 "Archived" records', async () => {
     const server = getTestServer('getRecords');
     await supertest(server)
       .get('/')
@@ -41,8 +41,20 @@ describe('getRecords: airtable integration test', () => {
         const activeRecords = records.filter(record => record.fields['Status'].includes('Active'))
         const archivedRecords = records.filter(record => record.fields['Status'].includes('Archived'))
   
-        assert.strictEqual(activeRecords.length, 2)
+        assert.strictEqual(activeRecords.length, 4)
         assert.strictEqual(archivedRecords.length, 0)
+      })
+  });
+  
+  it('.get second test playlist "test playlist #2" should return 33 records', async () => {
+    const anotherTestPlaylistId = 'tblyqMDwKvBNSJPOY' // test playlist #2 id
+    const server = getTestServer('getRecords');
+    await supertest(server)
+      .get('/')
+      .query({ baseId: BASE_ID, tableId: anotherTestPlaylistId })
+      .expect(200)
+      .then(response => {
+        assert.strictEqual(response.body.length, 33)
       })
   });
   
