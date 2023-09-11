@@ -48,6 +48,8 @@ const updateCounter = async (record, recordId) => {
 
 const updateTimestamps = async (record, playlistName, skipped) => {
   // https://airtable.com/developers/web/api/create-records
+  if (typeof skipped === 'string' && skipped === 'false') skipped = null;
+  
   const newRecord = {
     records: [
       {
@@ -101,7 +103,7 @@ functions.http('updateSongStats', async (req, res) => {
     
     await updateTimestamps(record, playlistName, skipped)
     
-    res.send(`data updated ${skipped ? '(skipped: true)' : ''}` )
+    res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
     if (error instanceof axios.AxiosError) {
       const { status, statusText } = error.response;
