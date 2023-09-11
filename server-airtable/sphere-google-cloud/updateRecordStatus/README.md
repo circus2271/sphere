@@ -19,7 +19,7 @@ curl -d 'baseId=app62dBMf9Yy7232bc&tableId=tbl886QoG6abctV&recordId=rec7th1mbahs
 
 for local testing use local server
 
-install depencencies and start a local server with a npm script:
+install dependencies and start a local server with a npm script:
 ```console
 npm i
 
