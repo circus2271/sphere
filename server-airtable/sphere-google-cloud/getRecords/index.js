@@ -2,9 +2,13 @@ const functions = require('@google-cloud/functions-framework');
 const axios = require('axios');
 require('dotenv').config()
 
-const { API_KEY, ALLOWED_ORIGINS_JSON } = process.env
+const {
+  API_KEY,
+  BASE_META__PERSONAL_TOKEN,
+  ALLOWED_ORIGINS_JSON } = process.env
 
 let airtableApiEndpoint;
+let baseTablesApiEndpoint;
 
 const setApiUrl = ({baseId, tableId}) => {
   if (!baseId || !tableId) {
@@ -12,12 +16,16 @@ const setApiUrl = ({baseId, tableId}) => {
   }
   
   airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
+  baseTablesApiEndpoint = `https://api.airtable.com/v0/meta/bases/${baseId}/tables`
 }
 
 const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
-const headers = {
+const regularHeaders = {
   'Authorization': `Bearer ${API_KEY}`,
 };
+const baseMetaHeaders = {
+  'Authorization': `Bearer ${BASE_META__PERSONAL_TOKEN}`,
+}
 
 /**
  * Get all records with "Playing" and without "Dislike" status
@@ -29,7 +37,7 @@ const getRecords = async () => {
   
   do {
     const response = await axios.get(`${airtableApiEndpoint}`, {
-      headers,
+      headers: regularHeaders,
       params: {
         offset: _offset ? _offset : '',
         // how to filter data by multiple keys (in airtable)
@@ -50,9 +58,10 @@ const getRecords = async () => {
 }
 
 
-const getAvailablePlaylists = async () => {
+// playlist from info table (playlists that are assumed to send to a client)
+const getDesiredPlaylists = async () => {
   const response = await axios.get(airtableApiEndpoint, {
-    headers,
+    headers: regularHeaders,
     params: {
       // how to filter data by multiple keys (in airtable)
       // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
@@ -67,6 +76,17 @@ const getAvailablePlaylists = async () => {
   
   const { records } = response.data;
   return records;
+}
+
+// https://airtable.com/developers/web/api/get-base-schema
+const getAllTableNames = async () => {
+  const response = await axios.get(baseTablesApiEndpoint, { headers: baseMetaHeaders })
+  const data = response.data
+  const tables = data.tables
+  const existingTableNames = tables.map(table => table.name)
+  
+  // console.log('tables', existingTableNames)
+  return existingTableNames
 }
 
 functions.http('getRecords', async (req, res) => {
@@ -88,8 +108,21 @@ functions.http('getRecords', async (req, res) => {
   
   try {
     if (req.query.tableId === 'Info') {
-      const playlists = await getAvailablePlaylists()
-      return res.send(playlists)
+      const desiredPlaylists = await getDesiredPlaylists()
+      const existingTableNames = await getAllTableNames()
+      
+      // if playlist is in info table && if playlist has its own table
+      const existingPlaylists = desiredPlaylists.filter(playlist => {
+        const playlistName = playlist.fields['Name'];
+        
+        return existingTableNames.includes(playlistName)
+      })
+      
+      // console.log('ip',playlists)
+      // console.log('etn',existingTableNames)
+      // console.log('epl',existingPlaylists)
+      
+      return res.send(existingPlaylists)
     }
     
     const records = await getRecords();
