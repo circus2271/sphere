@@ -108,8 +108,10 @@ functions.http('getRecords', async (req, res) => {
   
   try {
     if (req.query.tableId === 'Info') {
-      const desiredPlaylists = await getDesiredPlaylists()
-      const existingTableNames = await getAllTableNames()
+      const [desiredPlaylists, existingTableNames] = await Promise.all([
+        getDesiredPlaylists(),
+        getAllTableNames()
+      ])
       
       // if playlist is in info table && if playlist has its own table
       const existingPlaylists = desiredPlaylists.filter(playlist => {
