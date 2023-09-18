@@ -1,6 +1,9 @@
 const functions = require('@google-cloud/functions-framework');
+const { Storage } = require('@google-cloud/storage');
 const axios = require('axios');
 require('dotenv').config()
+
+const storage = new Storage();
 
 const {
   API_KEY,
@@ -26,6 +29,26 @@ const regularHeaders = {
 const baseMetaHeaders = {
   'Authorization': `Bearer ${BASE_META__PERSONAL_TOKEN}`,
 }
+
+/**
+ * Get signed URL function ny chatGPT
+ * This function generates a signed URL for a specified file in your Google Cloud Storage.
+ * options: Configurations for creating the signed URL.
+ version: Specifies which version of the signed URL system to use. 'v4' is the latest version as of last update.
+ action: The type of action you want to allow on the object. 'read' means users can read/download the object.
+ expires: The time after which the signed URL will be invalid. Here, it's set to 15 minutes after the URL is generated.
+ */
+const getSignedUrl = async (filePath) => {
+  const options = {
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+  };
+  const fullFilePath = `musiclibrary/${filePath}`;
+  const [url] = await storage.bucket('sphere-bucket').file(fullFilePath).getSignedUrl(options);
+  
+  return url;
+};
 
 /**
  * Get all records with "Playing" and without "Dislike" status
@@ -57,6 +80,30 @@ const getRecords = async () => {
   return allRecords;
 }
 
+/**
+ * Get records with signed URLs by chatGPT
+ *  * Retrieve records from the data source and generate a signed URL for each record based on the 'Name' column.
+ * This signed URL will point to a file in Google Cloud Storage and will be valid for 15 minutes.
+ * @returns {Promise<Array>} - A promise that resolves to an array of records, each enhanced with a 'signedUrl' field
+ */
+const getRecordsWithSignedUrls = async () => {
+  const records = await getRecords();
+  const recordsWithUrls = records.map(async record => {
+    const name = record.fields.Name; // assuming "fields" contains your columns and "Name" is one of them
+    try {
+      const url = await getSignedUrl(name);
+      return {
+        ...record,
+        signedUrl: url,
+      };
+    }
+    catch (error) {
+      console.error("Error generating signed URL: ", error);
+      throw new Error(`Failed to generate signed URL for ${name}: ${error.message}`);
+    }
+  });
+  return Promise.all(recordsWithUrls);
+};
 
 // playlist from info table (playlists that are assumed to send to a client)
 const getDesiredPlaylists = async () => {
@@ -79,14 +126,15 @@ const getDesiredPlaylists = async () => {
 }
 
 // https://airtable.com/developers/web/api/get-base-schema
-const getAllTableNames = async () => {
+const getAllTables = async () => {
   const response = await axios.get(baseTablesApiEndpoint, { headers: baseMetaHeaders })
   const data = response.data
   const tables = data.tables
-  const existingTableNames = tables.map(table => table.name)
+  // const existingTableNames = tables.map(table => table.name)
   
   // console.log('tables', existingTableNames)
-  return existingTableNames
+  // return existingTableNames
+  return tables
 }
 
 functions.http('getRecords', async (req, res) => {
@@ -108,27 +156,41 @@ functions.http('getRecords', async (req, res) => {
   
   try {
     if (req.query.tableId === 'Info') {
-      const [desiredPlaylists, existingTableNames] = await Promise.all([
+      const [desiredPlaylists, existingTables] = await Promise.all([
         getDesiredPlaylists(),
-        getAllTableNames()
+        getAllTables()
       ])
       
       // if playlist is in info table && if playlist has its own table
       const existingPlaylists = desiredPlaylists.filter(playlist => {
         const playlistName = playlist.fields['Name'];
+        const tableExists = existingTables.find(table => table.name === playlistName)
         
-        return existingTableNames.includes(playlistName)
+        return tableExists
+      })
+      
+      // add playlist id from table to a playlist
+      const playlistsWithTableIds = existingPlaylists.map(playlist => {
+        const playlistName = playlist.fields['Name']
+        const relatedTable = existingTables.find(table => table.name === playlistName)
+        
+        playlist.tableId = relatedTable.id
+        return playlist
       })
       
       // console.log('ip',playlists)
       // console.log('etn',existingTableNames)
       // console.log('epl',existingPlaylists)
-      
-      return res.send(existingPlaylists)
+  
+      // return res.send(existingPlaylists)
+      return res.send(playlistsWithTableIds)
     }
     
-    const records = await getRecords();
-    res.send(records)
+    // const records = await getRecords();
+    
+    // doesn't have tests
+    const recordsWithUrls = await getRecordsWithSignedUrls();
+    res.send(recordsWithUrls);
   } catch (error) {
     if (error instanceof axios.AxiosError) {
       const { status, statusText } = error.response;
