@@ -46,7 +46,7 @@ const updateCounter = async (record, recordId) => {
   return response.data
 }
 
-const updateTimestamps = async (record, playlistName, skipped) => {
+const updateTimestamps = async (record, playlistName, skipped, timestamp) => {
   // https://airtable.com/developers/web/api/create-records
   if (typeof skipped === 'string' && skipped === 'false') skipped = null;
   
@@ -56,7 +56,7 @@ const updateTimestamps = async (record, playlistName, skipped) => {
         fields: {
           Name: record.fields['Name'],
           'Playlist name': playlistName,
-          'Played at': new Date().toLocaleString("ru-RU", {timeZone: "Europe/Moscow"}),
+          'Played at': timestamp,
           'Skipped': skipped ? 'True' : null
         }
       }
@@ -88,7 +88,7 @@ functions.http('updateSongStats', async (req, res) => {
     return res.status(400).send(error.message);
   }
   
-  const { recordId, skipped, playlistName } = req.body
+  const { recordId, skipped, playlistName, timestamp } = req.body
   if (!recordId) {
     return res.status(400).send('please, provide recordId with your request')
   }
@@ -101,7 +101,7 @@ functions.http('updateSongStats', async (req, res) => {
       await updateCounter(record, recordId)
     }
     
-    await updateTimestamps(record, playlistName, skipped)
+    await updateTimestamps(record, playlistName, skipped, timestamp)
     
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
