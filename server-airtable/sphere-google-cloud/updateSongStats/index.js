@@ -2,7 +2,7 @@ const functions = require('@google-cloud/functions-framework');
 const axios = require('axios');
 require('dotenv').config()
 
-const { API_KEY, ALLOWED_ORIGINS_JSON } = process.env
+const { PERSONAL_ACCESS_TOKEN, ALLOWED_ORIGINS_JSON } = process.env
 
 let playlistTableApiEndpoint, timestampsTableApiEndpoint;
 
@@ -17,7 +17,7 @@ const setApiUrl = ({ baseId, tableId }) => {
 
 const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
 const headers = {
-  'Authorization': `Bearer ${API_KEY}`,
+  'Authorization': `Bearer ${PERSONAL_ACCESS_TOKEN}`,
 };
 
 

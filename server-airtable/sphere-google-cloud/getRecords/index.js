@@ -6,8 +6,7 @@ require('dotenv').config()
 const storage = new Storage();
 
 const {
-  API_KEY,
-  BASE_META__PERSONAL_TOKEN,
+  PERSONAL_ACCESS_TOKEN,
   ALLOWED_ORIGINS_JSON } = process.env
 
 let airtableApiEndpoint;
@@ -23,12 +22,9 @@ const setApiUrl = ({baseId, tableId}) => {
 }
 
 const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
-const regularHeaders = {
-  'Authorization': `Bearer ${API_KEY}`,
+const headers = {
+  'Authorization': `Bearer ${PERSONAL_ACCESS_TOKEN}`,
 };
-const baseMetaHeaders = {
-  'Authorization': `Bearer ${BASE_META__PERSONAL_TOKEN}`,
-}
 
 /**
  * Get signed URL function ny chatGPT
@@ -60,7 +56,7 @@ const getRecords = async () => {
   
   do {
     const response = await axios.get(`${airtableApiEndpoint}`, {
-      headers: regularHeaders,
+      headers,
       params: {
         offset: _offset ? _offset : '',
         // how to filter data by multiple keys (in airtable)
@@ -108,7 +104,7 @@ const getRecordsWithSignedUrls = async () => {
 // playlist from info table (playlists that are assumed to send to a client)
 const getDesiredPlaylists = async () => {
   const response = await axios.get(airtableApiEndpoint, {
-    headers: regularHeaders,
+    headers,
     params: {
       // how to filter data by multiple keys (in airtable)
       // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
@@ -127,7 +123,7 @@ const getDesiredPlaylists = async () => {
 
 // https://airtable.com/developers/web/api/get-base-schema
 const getAllTables = async () => {
-  const response = await axios.get(baseTablesApiEndpoint, { headers: baseMetaHeaders })
+  const response = await axios.get(baseTablesApiEndpoint, { headers })
   const data = response.data
   const tables = data.tables
   // const existingTableNames = tables.map(table => table.name)
