@@ -38,7 +38,7 @@ const getSignedUrl = async (filePath) => {
   const options = {
     version: 'v4',
     action: 'read',
-    expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days (7 * 24 hours)
   };
   const fullFilePath = `musiclibrary/${filePath}`;
   const [url] = await storage.bucket('sphere-bucket').file(fullFilePath).getSignedUrl(options);
