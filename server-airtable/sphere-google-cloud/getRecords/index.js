@@ -103,22 +103,35 @@ const getRecordsWithSignedUrls = async () => {
 
 // playlist from info table (playlists that are assumed to send to a client)
 const getDesiredPlaylists = async () => {
-  const response = await axios.get(airtableApiEndpoint, {
-    headers,
-    params: {
-      // how to filter data by multiple keys (in airtable)
-      // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
+  const params = {
+    // how to filter data by multiple keys (in airtable)
+    // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
   
-      // how to check if value contains in a field
-      // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#4_search_filter_contains_value_in_cell_column
+    // how to check if value contains in a field
+    // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#4_search_filter_contains_value_in_cell_column
       
-      // Status === 'Active' && !Status['Archived']
-      filterByFormula: `AND({Status}='Active', FIND('Archived', Status)=0)`
-    }
-  });
-  
-  const { records } = response.data;
-  return records;
+    // Status === 'Active' && !Status['Archived']
+    filterByFormula: `AND({Status}='Active', FIND('Archived', Status)=0)`,
+    view: 'Grid view'
+  }
+
+  const get = async (params) => {
+    return await axios.get(airtableApiEndpoint, {
+      headers,
+      params
+    });
+  }
+
+  let response = await get(params)
+    .catch(async () => {
+      // retry request without 'view' sorting paramenter (the name of a view, from where to get sorting order)
+      // it can happen if response status starts not from 2xx (for example, there will be an error if status is 400 or 422)
+      delete params.view
+      return await get(params)
+    })
+
+  const { records } = response.data
+  return records
 }
 
 // https://airtable.com/developers/web/api/get-base-schema
