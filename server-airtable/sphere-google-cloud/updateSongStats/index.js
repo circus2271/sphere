@@ -99,9 +99,9 @@ functions.http('updateSongStats', async (req, res) => {
   try {
     const record = await getRecord(recordId)
     
-    if (!skipped) {
-      await updateCounter(record, recordId)
-    }
+    // if (!skipped) {
+    await updateCounter(record, recordId)
+    // }
     
     await updateTimestamps(record, playlistName, skipped, timestamp, userAgent)
     
