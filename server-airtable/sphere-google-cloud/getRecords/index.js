@@ -53,8 +53,28 @@ const getSignedUrl = async (filePath) => {
 const getRecords = async () => {
   const allRecords = [];
   let _offset;
-  
+
+  // airtable has limit 5 requests per second
+  // so if we need to make 5'th
+  // let counter = 1
+  let counter = 0
+  let summary = 0
   do {
+    counter++
+    summary++
+
+    if (counter === 5) {
+      // wait a sec and reset a counter
+      console.log('waiting for timer to reset..')
+      await new Promise(resolve => {
+        setTimeout(() => resolve(), 1000)
+      })
+
+      counter = 1
+    }
+
+    console.log('counter', counter)
+
     const response = await axios.get(`${airtableApiEndpoint}`, {
       headers,
       params: {
@@ -68,12 +88,12 @@ const getRecords = async () => {
         sort: [{field: 'Times repeated', direction: 'asc'}]
       }
     });
-  
+
     const { records, offset } = response.data;
     allRecords.push(...records);
     _offset = offset;
   } while (_offset);
-  
+  console.log('requests total:', summary)
   return allRecords;
 }
 
