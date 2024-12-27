@@ -38,7 +38,7 @@ export default {
 			case('/updateRecordStatus'):
 				endpoint = updateRecordApiEndpoint
 				break
-			case('/updateSongStatsApiEndpoint'):
+			case('/updateSongStats'):
 				endpoint = updateSongStatsApiEndpoint
 				break
 		}
