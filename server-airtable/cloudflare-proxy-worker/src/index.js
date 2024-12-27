@@ -44,7 +44,7 @@ export default {
 		}
 
 		if (!endpoint) {
-			return new Response(`api route didn't match, try eiter '/login', '/getRecordsFromCdn', '/updateRecordStatus' or '/updateSongStatsApiEndpoint'`)
+			return new Response(`api route didn't match, try eiter '/login', '/getRecordsFromCdn', '/updateRecordStatus' or '/updateSongStats'`)
 		}
 
 		endpoint += searchParams
