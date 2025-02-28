@@ -14,42 +14,22 @@
 
 const basePath = 'https://europe-central2-sphere-385104.cloudfunctions.net'
 
-const loginApiEndpoint = `${basePath}/login`
-const getRecordsApiEndpoint = `${basePath}/getRecordsFromCdn` // info + tracks
-const updateRecordApiEndpoint = `${basePath}/updateRecordStatus`
-const updateSongStatsApiEndpoint = `${basePath}/updateSongStats`
-
 
 export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url)
-		const pathname = url.pathname
-		const searchParams = url.search
+		const { pathname, search } = url
 
-		let endpoint;
-
-		switch (pathname) {
+		switch (url.pathname) {
 			case('/login'):
-				endpoint = loginApiEndpoint
-				break
 			case('/getRecordsFromCdn'):
-				endpoint = getRecordsApiEndpoint
-				break
 			case('/updateRecordStatus'):
-				endpoint = updateRecordApiEndpoint
-				break
 			case('/updateSongStats'):
-				endpoint = updateSongStatsApiEndpoint
-				break
+				const newUrl = basePath + pathname + search
+
+				return await fetch(newUrl, request)
+			default:
+				return new Response(`api route didn't match, try eiter '/login', '/getRecordsFromCdn', '/updateRecordStatus' or '/updateSongStats'`)
 		}
-
-		if (!endpoint) {
-			return new Response(`api route didn't match, try eiter '/login', '/getRecordsFromCdn', '/updateRecordStatus' or '/updateSongStats'`)
-		}
-
-		endpoint += searchParams
-
-		// proxy this request with different url and same options
-		return await fetch(endpoint, request)
 	},
 };
