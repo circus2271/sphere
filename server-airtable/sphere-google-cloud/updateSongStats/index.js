@@ -46,7 +46,7 @@ const updateCounter = async (record, recordId) => {
   return response.data
 }
 
-const updateTimestamps = async (record, playlistName, skipped, timestamp, userAgent) => {
+const updateTimestamps = async (record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError) => {
   // https://airtable.com/developers/web/api/create-records
   if (typeof skipped === 'string' && skipped === 'false') skipped = null;
   
@@ -58,7 +58,13 @@ const updateTimestamps = async (record, playlistName, skipped, timestamp, userAg
           'Playlist name': playlistName,
           'Played at': timestamp,
           'Skipped': skipped ? 'True' : null,
-          'Agent': userAgent
+          'Agent': userAgent || '',
+          'Downloading speed': downloadingSpeed,
+          'Downloading time': downloadingTime,
+          'Like/Dislike': newStatus || '', // it may be undefined initially
+          'Index in a playlist': currentIndex, // track index
+          // 'Network error': networkError === true ? 'yes' : ''
+          'Network error': networkError ?? ''
         }
       }
     ]
@@ -90,7 +96,7 @@ functions.http('updateSongStats', async (req, res) => {
     return res.status(400).send(error.message);
   }
   
-  const { recordId, skipped, playlistName, timestamp } = req.body
+  const { recordId, skipped, playlistName, timestamp, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError } = req.body
   if (!recordId) {
     return res.status(400).send('please, provide recordId with your request')
   }
@@ -100,10 +106,12 @@ functions.http('updateSongStats', async (req, res) => {
     const record = await getRecord(recordId)
     
     // if (!skipped) {
-    await updateCounter(record, recordId)
+    if (!networkError) {
+      await updateCounter(record, recordId)
+    }
     // }
     
-    await updateTimestamps(record, playlistName, skipped, timestamp, userAgent)
+    await updateTimestamps(record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError)
     
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
