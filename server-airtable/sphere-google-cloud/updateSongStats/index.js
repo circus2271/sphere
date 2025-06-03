@@ -104,13 +104,14 @@ functions.http('updateSongStats', async (req, res) => {
   
   try {
     const record = await getRecord(recordId)
-    
-    // if (!skipped) {
-    if (!networkError) {
+
+    // because networkError is used now also as logging for domain
+    const actuallyHadAnError = networkError && !networkError.startsWith('domain')
+    // not very good to test network error like that
+    if (!skipped || !actuallyHadAnError) {
       await updateCounter(record, recordId)
     }
-    // }
-    
+
     await updateTimestamps(record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError)
     
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
