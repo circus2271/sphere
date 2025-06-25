@@ -17,7 +17,7 @@ const airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${firstTableI
 functions.http('updateHostingStats', async (req, res) => {
     const { origin } = req.headers;
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
         res.set('Access-Control-Allow-Origin', origin);
         res.set('Access-Control-Allow-Headers', 'Content-Type');
     }

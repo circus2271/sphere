@@ -16,7 +16,7 @@ const setApiUrl = ({baseId, tableId}) => {
   if (!baseId || !tableId) {
     throw new Error('please, provide baseId and tableId with your request');
   }
-  
+
   airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
   baseTablesApiEndpoint = `https://api.airtable.com/v0/meta/bases/${baseId}/tables`
 }
@@ -81,7 +81,7 @@ const getRecords = async () => {
         offset: _offset ? _offset : '',
         // how to filter data by multiple keys (in airtable)
         // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
-        
+
         // how to check if value contains in a field
         // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#4_search_filter_contains_value_in_cell_column
         filterByFormula: `AND({Status}='Playing', FIND('Dislike',{Like/Dislike})=0)`,
@@ -127,10 +127,10 @@ const getDesiredPlaylists = async () => {
   const params = {
     // how to filter data by multiple keys (in airtable)
     // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
-  
+
     // how to check if value contains in a field
     // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#4_search_filter_contains_value_in_cell_column
-      
+
     // Status === 'Active' && !Status['Archived']
     filterByFormula: `AND({Status}='Active', FIND('Archived', Status)=0)`,
     view: 'Grid view'
@@ -144,12 +144,12 @@ const getDesiredPlaylists = async () => {
   }
 
   let response = await get(params)
-    .catch(async () => {
-      // retry request without 'view' sorting paramenter (the name of a view, from where to get sorting order)
-      // it can happen if response status starts not from 2xx (for example, there will be an error if status is 400 or 422)
-      delete params.view
-      return await get(params)
-    })
+      .catch(async () => {
+        // retry request without 'view' sorting paramenter (the name of a view, from where to get sorting order)
+        // it can happen if response status starts not from 2xx (for example, there will be an error if status is 400 or 422)
+        delete params.view
+        return await get(params)
+      })
 
   const { records } = response.data
   return records
@@ -161,7 +161,7 @@ const getAllTables = async () => {
   const data = response.data
   const tables = data.tables
   // const existingTableNames = tables.map(table => table.name)
-  
+
   // console.log('tables', existingTableNames)
   // return existingTableNames
   return tables
@@ -169,55 +169,55 @@ const getAllTables = async () => {
 
 functions.http('getRecordsFromCdn', async (req, res) => {
   const { origin } = req.headers;
-  
-  if (allowedOrigins.includes(origin)) {
+
+  if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
     res.set('Access-Control-Allow-Origin', origin);
     res.set('Access-Control-Allow-Headers', 'Content-Type');
   }
-  
+
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'GET') return res.status(400).send('only GET and OPTIONS http request methods are supported');
-  
+
   try {
     setApiUrl(req.query);
   } catch (error) {
-     return res.status(400).send(error.message);
+    return res.status(400).send(error.message);
   }
-  
+
   try {
     if (req.query.tableId === 'Info') {
       const [desiredPlaylists, existingTables] = await Promise.all([
         getDesiredPlaylists(),
         getAllTables()
       ])
-      
+
       // if playlist is in info table && if playlist has its own table
       const existingPlaylists = desiredPlaylists.filter(playlist => {
         const playlistName = playlist.fields['Name'];
         const tableExists = existingTables.find(table => table.name === playlistName)
-        
+
         return tableExists
       })
-      
+
       // add playlist id from table to a playlist
       const playlistsWithTableIds = existingPlaylists.map(playlist => {
         const playlistName = playlist.fields['Name']
         const relatedTable = existingTables.find(table => table.name === playlistName)
-        
+
         playlist.tableId = relatedTable.id
         return playlist
       })
-      
+
       // console.log('ip',playlists)
       // console.log('etn',existingTableNames)
       // console.log('epl',existingPlaylists)
-  
+
       // return res.send(existingPlaylists)
       return res.send(playlistsWithTableIds)
     }
-    
+
     // const records = await getRecords();
-    
+
     // doesn't have tests
     // const recordsWithUrls = await getRecordsWithSignedUrls();
     const records = await getRecords();
@@ -227,7 +227,7 @@ functions.http('getRecordsFromCdn', async (req, res) => {
       const { status, statusText } = error.response;
       return res.status(status).send(statusText);
     }
-    
+
     res.send(error);
   }
 });
