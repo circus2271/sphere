@@ -17,9 +17,11 @@ const db = new Firestore({
 functions.http('login', async (req, res) => {
   const { origin } = req.headers;
 
-  if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
-    res.set('Access-Control-Allow-Origin', origin);
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (origin) {
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+    }
   }
 
   if (req.method === 'OPTIONS') return res.status(204).send('');
@@ -40,7 +42,11 @@ functions.http('login', async (req, res) => {
 
   const user = doc.data()
 
-  if (user.password === password) {
+
+  const multiplePasswords = Array.isArray(user.password)
+  const loggedIn = multiplePasswords ? user.password.includes(password) : user.password === password
+
+  if (loggedIn) {
     const { baseId, placeName } = user;
 
     if (!baseId || !placeName) {

@@ -3,8 +3,16 @@ const assert = require("assert");
 const { getTestServer } = require('@google-cloud/functions-framework/testing');
 require('dotenv').config()
 
-const { ALLOWED_ORIGINS_JSON } = process.env
+const {
+  ALLOWED_ORIGINS_JSON,
+  EXISTING_USER,
+  PASSWORD_FOR_EXISTING_USER,
+  TEST_PLACE_BASEID,
+  EXISTING_USER_WITH_MULTIPLE_PASSWORDS,
+  PASSWORDS_ARRAY_JSON
+} = process.env
 const mainAllowedOrigin = JSON.parse(ALLOWED_ORIGINS_JSON)[0];
+const PASSWORDS_ARRAY = JSON.parse(PASSWORDS_ARRAY_JSON)
 
 
 require('../');
@@ -37,8 +45,59 @@ describe('login: google cloud integration test', () => {
         assert.strictEqual(response.headers['access-control-allow-headers'], 'Content-Type')
       })
   });
-  
-  describe('.post http method:', () => {
+
+  describe('.post request allows multiple password login:', async () => {
+    it('one password case', async () => {
+      const server = getTestServer('login')
+      await supertest(server)
+          .post('/')
+          .send({
+            login: EXISTING_USER,
+            password: PASSWORD_FOR_EXISTING_USER
+          })
+          .expect(200)
+          .then(response => {
+            const { baseId, placeName } = response.body;
+            assert.strictEqual(baseId, TEST_PLACE_BASEID)
+            assert.strictEqual(placeName, EXISTING_USER)
+          })
+    })
+
+    it('multiple passwords case (password 1)', async () => {
+      const server = getTestServer('login')
+      await supertest(server)
+          .post('/')
+          .send({
+            login: EXISTING_USER_WITH_MULTIPLE_PASSWORDS,
+            password: PASSWORDS_ARRAY[0]
+          })
+          .expect(200)
+          .then(response => {
+            const { baseId, placeName } = response.body;
+            assert.strictEqual(baseId, TEST_PLACE_BASEID)
+            assert.strictEqual(placeName, EXISTING_USER_WITH_MULTIPLE_PASSWORDS)
+          })
+    })
+
+    it('multiple passwords case (password 2)', async () => {
+      const server = getTestServer('login')
+      await supertest(server)
+          .post('/')
+          .send({
+            login: EXISTING_USER_WITH_MULTIPLE_PASSWORDS,
+            password: PASSWORDS_ARRAY[1]
+          })
+          .expect(200)
+          .then(response => {
+            const { baseId, placeName } = response.body;
+            assert.strictEqual(baseId, TEST_PLACE_BASEID)
+            assert.strictEqual(placeName, EXISTING_USER_WITH_MULTIPLE_PASSWORDS)
+          })
+    })
+  })
+
+  describe('other .post http method cases:', () => {
+
     it('request body should contain non-empty login and password', async () => {
       const server = getTestServer('login')
       await supertest(server)
@@ -68,7 +127,7 @@ describe('login: google cloud integration test', () => {
       await supertest(server)
         .post('/')
         .send({
-          login: 'Pinia',
+          login: EXISTING_USER,
           password: 'wrong password 111222'
         })
         .expect(401)
@@ -82,14 +141,14 @@ describe('login: google cloud integration test', () => {
       await supertest(server)
         .post('/')
         .send({
-          login: 'test-user-1',
-          password: 'pass1'
+          login: EXISTING_USER,
+          password: PASSWORD_FOR_EXISTING_USER
         })
         .expect(200)
         .then(response => {
           const { baseId, placeName } = response.body;
-          assert.strictEqual(baseId, 'test-baseId-value')
-          assert.strictEqual(placeName, 'default-placeName')
+          assert.strictEqual(baseId, TEST_PLACE_BASEID)
+          assert.strictEqual(placeName, EXISTING_USER)
         })
     })
     
