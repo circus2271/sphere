@@ -21,13 +21,26 @@ const headers = {
 };
 
 
-const getRecord = async (recordId) => {
+const getRecord = async (recordId, songName) => {
+  if (recordId) {
+    const response = await axios.get(`${playlistTableApiEndpoint}/${recordId}`, {
+      headers,
+    })
+    return response.data
+  }
 
-  const response = await axios.get(`${playlistTableApiEndpoint}/${recordId}`, {
-    headers,
-  })
+  if (songName) {
+    const formula = encodeURIComponent(`{Name} = "${songName}"`);
+    const url = `${playlistTableApiEndpoint}?filterByFormula=${formula}`;
 
-  return response.data
+    const response = await axios.get(url, {
+      headers,
+    })
+
+    // console.log(response.data.records.length)
+    // console.log(response.data.records)
+    return response.data.records[0]
+  }
 }
 
 const updateCounter = async (record, recordId) => {
@@ -46,7 +59,7 @@ const updateCounter = async (record, recordId) => {
   return response.data
 }
 
-const updateTimestamps = async (record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError) => {
+const updateTimestamps = async (record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId) => {
   // https://airtable.com/developers/web/api/create-records
   if (typeof skipped === 'string' && skipped === 'false') skipped = null;
 
@@ -59,12 +72,13 @@ const updateTimestamps = async (record, playlistName, skipped, timestamp, userAg
           'Played at': timestamp,
           'Skipped': skipped ? 'True' : null,
           'Agent': userAgent || '',
-          'Downloading speed': downloadingSpeed,
-          'Downloading time': downloadingTime,
+          'Downloading speed': downloadingSpeed || '',
+          'Downloading time': downloadingTime || '',
           'Like/Dislike': newStatus || '', // it may be undefined initially
           'Index in a playlist': currentIndex, // track index
           // 'Network error': networkError === true ? 'yes' : ''
-          'Network error': networkError ?? ''
+          'Network error': networkError ?? '',
+          'Device unique id': deviceUniqueId || ''
         }
       }
     ]
@@ -81,9 +95,11 @@ functions.http('updateSongStats', async (req, res) => {
   const origin = req.headers['origin'];
   const userAgent = req.headers['user-agent'];
 
-  if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
-    res.set('Access-Control-Allow-Origin', origin);
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (origin) {
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+    }
   }
 
   if (req.method === 'OPTIONS') return res.status(204).send('');
@@ -96,23 +112,23 @@ functions.http('updateSongStats', async (req, res) => {
     return res.status(400).send(error.message);
   }
 
-  const { recordId, skipped, playlistName, timestamp, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError } = req.body
-  if (!recordId) {
-    return res.status(400).send('please, provide recordId with your request')
+  const { recordId, skipped, playlistName, timestamp, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId, songName } = req.body
+  if (!recordId && !songName) {
+    return res.status(400).send('please, provide recordId or songName with your request')
   }
 
 
   try {
-    const record = await getRecord(recordId)
-
+    const record = await getRecord(recordId, songName)
     // because networkError is used now also as logging for domain
     const actuallyHadAnError = networkError && !networkError.startsWith('domain')
     // not very good to test network error like that
     if (!skipped || !actuallyHadAnError) {
-      await updateCounter(record, recordId)
+      const id = recordId ?? record.id
+      await updateCounter(record, id)
     }
 
-    await updateTimestamps(record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError)
+    await updateTimestamps(record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId)
 
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
