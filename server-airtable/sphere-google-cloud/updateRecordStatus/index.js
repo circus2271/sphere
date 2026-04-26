@@ -24,8 +24,9 @@ const headers = {
  * @param (string) recordId
  * @param (string) newStatusSingleValueString (for example, 'Like', 'Dislike')
  */
-const updateRecordStatus = async (recordId, newStatusSingleValueString) => {
-  const record = await getRecord(recordId);
+const updateRecordStatus = async (recordId, newStatusSingleValueString, songName) => {
+  const record = await getRecord(recordId, songName);
+  console.log(record)
   const currentStatusArray = record.fields['Like/Dislike'] || []; // because empty 'Like/Dislike' field is undefined by default
 
   if (currentStatusArray.includes(newStatusSingleValueString)) {
@@ -33,17 +34,34 @@ const updateRecordStatus = async (recordId, newStatusSingleValueString) => {
   }
 
   const updatedStatusArray = [...currentStatusArray, newStatusSingleValueString];
-  const response = await patchRecord(recordId, updatedStatusArray);
+  // otherwise there may be an error if to look recordId directly.
+  // cause a track could be retrieved by its name and this value just missing with an original request
+  const id = record.id
+  const response = await patchRecord(id, updatedStatusArray);
 
   return response;
 }
 
-const getRecord = async (recordId) => {
-  const response = await axios.get(`${airtableApiEndpoint}/${recordId}`, {
-    headers,
-  })
+const getRecord = async (recordId, songName) => {
+  if (recordId) {
+    const response = await axios.get(`${airtableApiEndpoint}/${recordId}`, {
+      headers,
+    })
+    return response.data
+  }
 
-  return response.data
+  if (songName) {
+    const formula = encodeURIComponent(`{Name} = "${songName}"`);
+    const url = `${airtableApiEndpoint}/?filterByFormula=${formula}`;
+
+    const response = await axios.get(url, {
+      headers,
+    })
+
+    // console.log(response.data.records.length)
+    // console.log(response.data.records)
+    return response.data.records[0]
+  }
 }
 
 const patchRecord = async (recordId, updatedStatusArray) => {
@@ -62,9 +80,11 @@ const patchRecord = async (recordId, updatedStatusArray) => {
 functions.http('updateRecordStatus', async (req, res) => {
   const { origin } = req.headers;
 
-  if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
-    res.set('Access-Control-Allow-Origin', origin);
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (origin) {
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+    }
   }
 
   if (req.method === 'OPTIONS') return res.status(204).send('');
@@ -76,13 +96,17 @@ functions.http('updateRecordStatus', async (req, res) => {
     return res.status(400).send(error.message);
   }
 
-  const { recordId, newStatus } = req.body
-  if (!recordId || !newStatus) {
-    return res.status(400).send('please, provide recordId and a new status (newStatus) with your request')
+  const { recordId, newStatus, songName } = req.body
+  if (!recordId && !songName) {
+    return res.status(400).send('please, provide recordId or songName with your request')
+  }
+
+  if (!newStatus) {
+    return res.status(400).send('please, provide newStatus with your request')
   }
 
   try {
-    const updatedRecord = await updateRecordStatus(recordId, newStatus)
+    const updatedRecord = await updateRecordStatus(recordId, newStatus, songName)
     res.send(updatedRecord)
   } catch (error) {
     if (error instanceof axios.AxiosError) {
