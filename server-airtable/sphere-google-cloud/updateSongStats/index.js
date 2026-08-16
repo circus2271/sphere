@@ -4,24 +4,13 @@ require('dotenv').config()
 
 const { PERSONAL_ACCESS_TOKEN, ALLOWED_ORIGINS_JSON } = process.env
 
-let playlistTableApiEndpoint, timestampsTableApiEndpoint;
-
-const setApiUrl = ({ baseId, tableId }) => {
-  if (!baseId || !tableId) {
-    throw new Error('please, provide baseId and tableId with your request')
-  }
-
-  playlistTableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
-  timestampsTableApiEndpoint = `https://api.airtable.com/v0/${baseId}/Timestamps`
-}
-
 const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
 const headers = {
   'Authorization': `Bearer ${PERSONAL_ACCESS_TOKEN}`,
 };
 
 
-const getRecord = async (recordId, songName) => {
+const getRecord = async (playlistTableApiEndpoint, recordId, songName) => {
   if (recordId) {
     const response = await axios.get(`${playlistTableApiEndpoint}/${recordId}`, {
       headers,
@@ -43,7 +32,7 @@ const getRecord = async (recordId, songName) => {
   }
 }
 
-const updateCounter = async (record, recordId) => {
+const updateCounter = async (playlistTableApiEndpoint, record, recordId) => {
 
   const currentCounter = record.fields['Times repeated'] || 0;
   const newCount = currentCounter + 1
@@ -59,7 +48,7 @@ const updateCounter = async (record, recordId) => {
   return response.data
 }
 
-const updateTimestamps = async (record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId) => {
+const updateTimestamps = async (timestampsTableApiEndpoint, record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId) => {
   // https://airtable.com/developers/web/api/create-records
   if (typeof skipped === 'string' && skipped === 'false') skipped = null;
 
@@ -105,30 +94,30 @@ functions.http('updateSongStats', async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS http request methods are supported');
 
-
-  try {
-    setApiUrl(req.body);
-  } catch (error) {
-    return res.status(400).send(error.message);
+  const { baseId, tableId } = req.body
+  if (!baseId || !tableId) {
+    return res.status(400).send('please, provide baseId and tableId with your request');
   }
+
+  const playlistTableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
+  const timestampsTableApiEndpoint = `https://api.airtable.com/v0/${baseId}/Timestamps`
 
   const { recordId, skipped, playlistName, timestamp, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId, songName } = req.body
   if (!recordId && !songName) {
     return res.status(400).send('please, provide recordId or songName with your request')
   }
 
-
   try {
-    const record = await getRecord(recordId, songName)
+    const record = await getRecord(playlistTableApiEndpoint, recordId, songName)
     // because networkError is used now also as logging for domain
     const actuallyHadAnError = networkError && !networkError.startsWith('domain')
     // not very good to test network error like that
     if (!skipped || !actuallyHadAnError) {
       const id = recordId ?? record.id
-      await updateCounter(record, id)
+      await updateCounter(playlistTableApiEndpoint, record, id)
     }
 
-    await updateTimestamps(record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId)
+    await updateTimestamps(timestampsTableApiEndpoint, record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId)
 
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
