@@ -211,6 +211,11 @@ functions.http('getRecordsFromCdn', async (req, res) => {
 
     // airtableApiEndpoint points now not to Info table, but to some other table with tracks
     const records = await getRecords(airtableApiEndpoint);
+
+    if (req.query.format === '2') {
+      return res.send(format(records));
+    }
+
     res.send(records);
   } catch (error) {
     if (error instanceof axios.AxiosError) {
@@ -225,4 +230,94 @@ functions.http('getRecordsFromCdn', async (req, res) => {
     res.send(error);
   }
 });
+
+// Кусок для serverless-функции: Airtable records → плейлист format 2.
+// Копируется целиком вниз файла GCF, вызывается так:
+//
+//   if (req.query.format === '2') {
+//       return res.send(format(records));
+//   }
+//
+// place пока не отдаём: в записях Airtable его нет, а откуда он берётся —
+// ещё не решено. Добавить обратно — одно поле в возвращаемом объекте.
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+/**
+ * Разбирает то, что куратор написал в ячейке дня, в пару строк 'HH:MM'.
+ *
+ * Принцип: терпимы к тому, что берём — строги к тому, что отдаём.
+ * На входе кураторский разнобой, на выходе всегда ровно 'HH:MM'.
+ *
+ * Возвращает ['HH:MM', 'HH:MM'] либо null, если разобрать не вышло.
+ * null — не ошибка выполнения: вызывающий код кладёт запись в warnings
+ * и идёт дальше. Одна опечатка не должна ронять весь плейлист.
+ */
+function parseAirtableInterval(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+
+  // Разделитель — дефис, но принимаем и тире, и длинное тире: автозамена
+  // на Маке и в iOS превращает дефис в тире сама, а в ячейке '5–20' от
+  // '5-20' глазом не отличить. Пустые куски отбрасываем, поэтому '5 - 20',
+  // '5-20' и даже '5--20' дают одно и то же.
+  const parts = raw.split(/[-–—]/).map(s => s.trim()).filter(Boolean);
+  if (parts.length !== 2) return null;
+
+  const toHHMM = (part) => {
+    // Минуты не обязательны: '5' — это '05:00'.
+    // Точка наравне с двоеточием: '5.30' — обычная запись времени.
+    const [h, m = '0'] = part.split(/[:.]/).map(s => s.trim());
+    const hh = Number(h), mm = Number(m);
+
+    // Number('') === 0 и Number('9ч') === NaN — обе дыры закрывает
+    // проверка на целое. Без неё мусор молча стал бы полуночью.
+    if (!Number.isInteger(hh) || !Number.isInteger(mm)) return null;
+
+    // 24 допускаем как «конец суток». Больше — уже пирожковый диалект
+    // ('26:00'), в кураторской ячейке ему делать нечего.
+    if (hh < 0 || hh > 24 || mm < 0 || mm > 59) return null;
+
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  };
+
+  const start = toHHMM(parts[0]);
+  const end = toHHMM(parts[1]);
+  return (start && end) ? [start, end] : null;
+}
+
+// Имя файла в format 2 — человекочитаемое. В Airtable оно percent-encoded;
+// на битой последовательности decodeURIComponent бросает — оставляем как есть.
+function decodeName(name) {
+  try { return decodeURIComponent(name); } catch { return name; }
+}
+
+function format(records) {
+  const tracks = [];
+
+  for (const rec of records || []) {
+    const f = rec.fields || {};
+    if (!f['Full link']) continue; // нечего играть — нечего отдавать
+
+    const schedule = {};
+    for (const day of DAYS) {
+      const interval = parseAirtableInterval(f[day]);
+      // Выпадает только то, что не разобралось ('', '9ч-20', '9-25'):
+      // в format 2 отсутствие дня значит «в этот день не звучит».
+      // Нулевое окно '0-0' — не мусор, а кураторская запись, и мы отдаём
+      // её как есть, ['00:00','00:00']; что она значит, решает плеер.
+      if (!interval) continue;
+      schedule[day.toLowerCase()] = interval;
+    }
+
+    const attachment = Array.isArray(f.audio) ? f.audio[0] : null;
+    tracks.push({
+      recordId: rec.id,
+      fileName: decodeName(attachment?.filename || f['Full link'].split('/').pop().split('?')[0]),
+      url: f['Full link'],
+      schedule,
+    });
+  }
+
+  return { format: 2, generatedAt: new Date().toISOString(), tracks };
+}
 
