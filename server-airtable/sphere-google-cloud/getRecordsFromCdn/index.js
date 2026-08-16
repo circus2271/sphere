@@ -9,17 +9,6 @@ const {
   PERSONAL_ACCESS_TOKEN,
   ALLOWED_ORIGINS_JSON } = process.env
 
-let airtableApiEndpoint;
-let baseTablesApiEndpoint;
-
-const setApiUrl = ({baseId, tableId}) => {
-  if (!baseId || !tableId) {
-    throw new Error('please, provide baseId and tableId with your request');
-  }
-
-  airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
-  baseTablesApiEndpoint = `https://api.airtable.com/v0/meta/bases/${baseId}/tables`
-}
 
 const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
 const headers = {
@@ -50,7 +39,7 @@ const headers = {
  * Get all records with "Playing" and without "Dislike" status
  * ("Playing" && !"Dislike")
  */
-const getRecords = async () => {
+const getRecords = async (airtableApiEndpoint) => {
   const allRecords = [];
   let _offset;
 
@@ -123,7 +112,7 @@ const getRecords = async () => {
 // };
 
 // playlist from info table (playlists that are assumed to send to a client)
-const getDesiredPlaylists = async () => {
+const getDesiredPlaylists = async (airtableApiEndpoint) => {
   const params = {
     // how to filter data by multiple keys (in airtable)
     // https://help.landbot.io/article/ngr9wef0b4-how-to-make-the-most-of-advanced-filters-filter-by-formula-airtable-block#3_more_than_one_filter
@@ -156,7 +145,7 @@ const getDesiredPlaylists = async () => {
 }
 
 // https://airtable.com/developers/web/api/get-base-schema
-const getAllTables = async () => {
+const getAllTables = async (baseTablesApiEndpoint) => {
   const response = await axios.get(baseTablesApiEndpoint, { headers })
   const data = response.data
   const tables = data.tables
@@ -170,28 +159,35 @@ const getAllTables = async () => {
 functions.http('getRecordsFromCdn', async (req, res) => {
   const { origin } = req.headers;
 
-  if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
-    res.set('Access-Control-Allow-Origin', origin);
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (origin) {
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://192')) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+    }
   }
 
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'GET') return res.status(400).send('only GET and OPTIONS http request methods are supported');
 
-  try {
-    setApiUrl(req.query);
-  } catch (error) {
-    return res.status(400).send(error.message);
+  const { baseId, tableId } = req.query
+  if (!baseId || !tableId) {
+    return res.status(400).send('please, provide baseId and tableId with your request');
   }
+
+  const airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
+  const baseTablesApiEndpoint = `https://api.airtable.com/v0/meta/bases/${baseId}/tables`
 
   try {
     if (req.query.tableId === 'Info') {
       const [desiredPlaylists, existingTables] = await Promise.all([
-        getDesiredPlaylists(),
-        getAllTables()
+        // airtable api endpoint points now to the Info table (baseId/Info)
+        getDesiredPlaylists(airtableApiEndpoint),
+        // get all tables from a base (use special airtable "tables" endpoint
+        getAllTables(baseTablesApiEndpoint)
       ])
 
       // if playlist is in info table && if playlist has its own table
+      // (check if a table from Info table actually exists)
       const existingPlaylists = desiredPlaylists.filter(playlist => {
         const playlistName = playlist.fields['Name'];
         const tableExists = existingTables.find(table => table.name === playlistName)
@@ -216,11 +212,8 @@ functions.http('getRecordsFromCdn', async (req, res) => {
       return res.send(playlistsWithTableIds)
     }
 
-    // const records = await getRecords();
-
-    // doesn't have tests
-    // const recordsWithUrls = await getRecordsWithSignedUrls();
-    const records = await getRecords();
+    // airtableApiEndpoint points now not to Info table, but to some other table with tracks
+    const records = await getRecords(airtableApiEndpoint);
     res.send(records);
   } catch (error) {
     if (error instanceof axios.AxiosError) {

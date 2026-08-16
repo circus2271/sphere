@@ -10,7 +10,7 @@ const mainAllowedOrigin = JSON.parse(ALLOWED_ORIGINS_JSON)[0]
 require('../');
 describe('getRecords: airtable integration test', () => {
   it('.get request without baseId and tableId query parameters should return 400', async () => {
-    const server = getTestServer('getRecords');
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .expect(400)
@@ -19,19 +19,19 @@ describe('getRecords: airtable integration test', () => {
       })
   });
   
-  it('.get request to a "Info" table should return 4 records', async () => {
-    const server = getTestServer('getRecords');
+  it('.get request to a "Info" table should return 1 record', async () => {
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: 'Info' })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 4)
+        assert.strictEqual(response.body.length, 1)
       })
   });
   
-  it('.get request to a "Info" table should contain 4 "Active" records and 0 "Archived" records', async () => {
-    const server = getTestServer('getRecords');
+  it('.get request to a "Info" table should contain 1 "Active" records and 0 "Archived" records', async () => {
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: 'Info' })
@@ -41,36 +41,36 @@ describe('getRecords: airtable integration test', () => {
         const activeRecords = records.filter(record => record.fields['Status'].includes('Active'))
         const archivedRecords = records.filter(record => record.fields['Status'].includes('Archived'))
   
-        assert.strictEqual(activeRecords.length, 4)
+        assert.strictEqual(activeRecords.length, 1)
         assert.strictEqual(archivedRecords.length, 0)
       })
   });
   
-  it('.get second test playlist "test playlist #2" should return 30 records', async () => {
-    const anotherTestPlaylistId = 'tblyqMDwKvBNSJPOY' // test playlist #2 id
-    const server = getTestServer('getRecords');
+  it('.get second test playlist "Hitch 1 interval" should return 14 records', async () => {
+    const anotherTestPlaylistId = 'tblfz3HKWkhhnxXDT' // test playlist #2 id
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: anotherTestPlaylistId })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 30)
+        assert.strictEqual(response.body.length, 14)
       })
   });
   
-  it('.get request with right parameters should return 86 records', async () => {
-    const server = getTestServer('getRecords');
+  it('.get request with right parameters should return 5 records', async () => {
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: TABLE_ID })
       .expect(200)
       .then(response => {
-        assert.strictEqual(response.body.length, 86)
+        assert.strictEqual(response.body.length, 5)
       })
   });
   
   it('all records should have "Playing" status and don\'t have "Dislike" status', async () => {
-    const server = getTestServer('getRecords');
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: TABLE_ID })
@@ -88,7 +88,7 @@ describe('getRecords: airtable integration test', () => {
   });
   
   it('.get method should return 0 "Dislike" records', async () => {
-    const server = getTestServer('getRecords');
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .get('/')
       .query({ baseId: BASE_ID, tableId: TABLE_ID })
@@ -101,7 +101,7 @@ describe('getRecords: airtable integration test', () => {
   });
   
   it('"not .get" and "not OPTIONS" http request methods should return 400 status with a \'pre-defined\' error message string', async () => {
-    const server = getTestServer('getRecords');
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .post('/')
       .expect(400)
@@ -111,14 +111,14 @@ describe('getRecords: airtable integration test', () => {
   });
   
   it('OPTIONS http request method should return 204 status code', async () => {
-    const server = getTestServer('getRecords');
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .options('/')
       .expect(204)
   });
   
   it('sphere main player domain is allowed for cors and "Content-Type" header is allowed', async () => {
-    const server = getTestServer('getRecords');
+    const server = getTestServer('getRecordsFromCdn');
     await supertest(server)
       .options('/')
       .set('origin', mainAllowedOrigin)
