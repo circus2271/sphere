@@ -4,16 +4,6 @@ require('dotenv').config()
 
 const { PERSONAL_ACCESS_TOKEN, ALLOWED_ORIGINS_JSON } = process.env
 
-let airtableApiEndpoint;
-
-const setApiUrl = ({ baseId, tableId }) => {
-  if (!baseId || !tableId) {
-    throw new Error('please, provide baseId and tableId with your request')
-  }
-
-  airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
-}
-
 const allowedOrigins = JSON.parse(ALLOWED_ORIGINS_JSON);
 const headers = {
   'Authorization': `Bearer ${PERSONAL_ACCESS_TOKEN}`,
@@ -23,9 +13,10 @@ const headers = {
  *
  * @param (string) recordId
  * @param (string) newStatusSingleValueString (for example, 'Like', 'Dislike')
+ * @param (string) airtableApiEndpoint (url to airtable table...)
  */
-const updateRecordStatus = async (recordId, newStatusSingleValueString, songName) => {
-  const record = await getRecord(recordId, songName);
+const updateRecordStatus = async (airtableApiEndpoint, recordId, newStatusSingleValueString, songName) => {
+  const record = await getRecord(airtableApiEndpoint, recordId, songName);
   console.log(record)
   const currentStatusArray = record.fields['Like/Dislike'] || []; // because empty 'Like/Dislike' field is undefined by default
 
@@ -37,12 +28,12 @@ const updateRecordStatus = async (recordId, newStatusSingleValueString, songName
   // otherwise there may be an error if to look recordId directly.
   // cause a track could be retrieved by its name and this value just missing with an original request
   const id = record.id
-  const response = await patchRecord(id, updatedStatusArray);
+  const response = await patchRecord(airtableApiEndpoint, id, updatedStatusArray);
 
   return response;
 }
 
-const getRecord = async (recordId, songName) => {
+const getRecord = async (airtableApiEndpoint, recordId, songName) => {
   if (recordId) {
     const response = await axios.get(`${airtableApiEndpoint}/${recordId}`, {
       headers,
@@ -64,7 +55,7 @@ const getRecord = async (recordId, songName) => {
   }
 }
 
-const patchRecord = async (recordId, updatedStatusArray) => {
+const patchRecord = async (airtableApiEndpoint, recordId, updatedStatusArray) => {
   const response = await axios.patch(`${airtableApiEndpoint}/${recordId}`, {
     fields: {
       'Like/Dislike': updatedStatusArray
@@ -90,11 +81,13 @@ functions.http('updateRecordStatus', async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'POST') return res.status(400).send('only POST and OPTIONS http request methods are supported');
 
-  try {
-    setApiUrl(req.body);
-  } catch (error) {
-    return res.status(400).send(error.message);
+
+  const { baseId, tableId } = req.body
+  if (!baseId || !tableId) {
+    return res.status(400).send('please, provide baseId and tableId with your request');
   }
+
+  const airtableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
 
   const { recordId, newStatus, songName } = req.body
   if (!recordId && !songName) {
@@ -106,7 +99,7 @@ functions.http('updateRecordStatus', async (req, res) => {
   }
 
   try {
-    const updatedRecord = await updateRecordStatus(recordId, newStatus, songName)
+    const updatedRecord = await updateRecordStatus(airtableApiEndpoint, recordId, newStatus, songName)
     res.send(updatedRecord)
   } catch (error) {
     if (error instanceof axios.AxiosError) {
