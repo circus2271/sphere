@@ -122,8 +122,12 @@ functions.http('updateSongStats', async (req, res) => {
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
     if (error instanceof axios.AxiosError) {
-      const { status, statusText } = error.response;
-      return res.status(status).send(status + statusText);
+      if (error.response) {
+        const { status, statusText } = error.response;
+        return res.status(status).send(status + statusText);
+      }
+
+      return res.status(502).send(error.message);
     }
 
     res.send(error);

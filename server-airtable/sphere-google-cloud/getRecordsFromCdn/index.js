@@ -1,9 +1,6 @@
 const functions = require('@google-cloud/functions-framework');
-const { Storage } = require('@google-cloud/storage');
 const axios = require('axios');
 require('dotenv').config()
-
-const storage = new Storage();
 
 const {
   PERSONAL_ACCESS_TOKEN,
@@ -217,8 +214,12 @@ functions.http('getRecordsFromCdn', async (req, res) => {
     res.send(records);
   } catch (error) {
     if (error instanceof axios.AxiosError) {
-      const { status, statusText } = error.response;
-      return res.status(status).send(statusText);
+      if (error.response) {
+        const { status, statusText } = error.response;
+        return res.status(status).send(statusText);
+      }
+
+      return res.status(502).send(error.message);
     }
 
     res.send(error);
