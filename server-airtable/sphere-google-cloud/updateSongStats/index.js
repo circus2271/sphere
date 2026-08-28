@@ -123,8 +123,8 @@ functions.http('updateSongStats', async (req, res) => {
   } catch (error) {
     if (error instanceof axios.AxiosError) {
       if (error.response) {
-        const { status, statusText } = error.response;
-        return res.status(status).send(status + statusText);
+        const { status } = error.response;
+        return res.status(status).send(JSON.stringify(error.response.data));
       }
 
       return res.status(502).send(error.message);
