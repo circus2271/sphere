@@ -48,7 +48,7 @@ const updateCounter = async (playlistTableApiEndpoint, record, recordId) => {
   return response.data
 }
 
-const updateTimestamps = async (timestampsTableApiEndpoint, record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId) => {
+const updateTimestamps = async (timestampsTableApiEndpoint, record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId, zavhozStatus) => {
   // https://airtable.com/developers/web/api/create-records
   if (typeof skipped === 'string' && skipped === 'false') skipped = null;
 
@@ -67,7 +67,8 @@ const updateTimestamps = async (timestampsTableApiEndpoint, record, playlistName
           'Index in a playlist': currentIndex, // track index
           // 'Network error': networkError === true ? 'yes' : ''
           'Network error': networkError ?? '',
-          'Device unique id': deviceUniqueId || ''
+          'Device unique id': deviceUniqueId || '',
+          'Zavhoz status': zavhozStatus ?? ''
         }
       }
     ]
@@ -102,7 +103,7 @@ functions.http('updateSongStats', async (req, res) => {
   const playlistTableApiEndpoint = `https://api.airtable.com/v0/${baseId}/${tableId}`
   const timestampsTableApiEndpoint = `https://api.airtable.com/v0/${baseId}/Timestamps`
 
-  const { recordId, skipped, playlistName, timestamp, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId, songName } = req.body
+  const { recordId, skipped, playlistName, timestamp, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId, songName, zavhozStatus } = req.body
   if (!recordId && !songName) {
     return res.status(400).send('please, provide recordId or songName with your request')
   }
@@ -117,7 +118,7 @@ functions.http('updateSongStats', async (req, res) => {
       await updateCounter(playlistTableApiEndpoint, record, id)
     }
 
-    await updateTimestamps(timestampsTableApiEndpoint, record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId)
+    await updateTimestamps(timestampsTableApiEndpoint, record, playlistName, skipped, timestamp, userAgent, downloadingSpeed, downloadingTime, newStatus, currentIndex, networkError, deviceUniqueId, zavhozStatus)
 
     res.send(`data updated ${(skipped && skipped !== 'false') ? '(skipped: true)' : ''}` )
   } catch (error) {
