@@ -312,7 +312,7 @@ function format(records) {
     const attachment = Array.isArray(f.audio) ? f.audio[0] : null;
     tracks.push({
       recordId: rec.id,
-      fileName: decodeName(attachment?.filename || f['Full link'].split('/').pop().split('?')[0]),
+      fileName: decodeName(f['Full link'].split('/').pop().split('?')[0]),
       url: f['Full link'],
       schedule,
     });
@@ -320,4 +320,3 @@ function format(records) {
 
   return { format: 2, generatedAt: new Date().toISOString(), tracks };
 }
-
